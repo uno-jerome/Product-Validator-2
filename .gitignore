@@ -1,49 +1,37 @@
-# Python bytecode and caches
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# Virtual environments
-.venv/
-venv/
-env/
+# Production build & cache artifacts
+dist/
+dist-ssr/
+build/
+.vite/
 
-# Coverage and test reports
-.coverage
-.coverage.*
-htmlcov/
-coverage.xml
-.pytest_cache/
+# CI/CD and GitHub workflows (not shared)
+.github/
+workflows/
 
-# Local environment and secrets
+# Local environment & secrets
 .env
-.env.*
-!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# IDE and editor files
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Editor & OS temporary files
 .vscode/
-.vscode-counter/
-.vscodecounter/
 .idea/
 *.swp
 *.swo
-
-# Build and distribution artifacts
-build/
-dist/
-node_modules/
-*.egg-info/
-
-# Application and database logs
-*.log
-*.sql.log
-
-# Keep project source and tests tracked
-!/core/
-!/database/
-!/tests/
-
-
+.DS_Store
+Thumbs.db

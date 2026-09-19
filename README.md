@@ -1,134 +1,142 @@
-# Product Code Validator — What's your DFA
-> **COM243**  
+# Deterministic Finite Automaton (DFA) - Product Code Validator
 
-A native inventory manager and interactive DFA simulator built with Python, NiceGUI, and MySQL. It validates structured product serial codes against a minimized Deterministic Finite Automaton (DFA) before interacting with the database.
+A formal deterministic finite automaton simulator and inventory asset validator recognizing the regular language $L = \{ c_1 c_2 - y_1 y_2 y_3 y_4 - s_1 s_2 s_3 \mid c_i \in [A\text{-}Z], y_i, s_i \in [0\text{-}9] \}$.
 
 ---
 
-## 1. Formal Automata Specification
+## Formal Automata Specification
 
-The target language $L$ validates product serial codes categorized by hardware domain:
+The machine is defined as a 5-tuple Deterministic Finite Automaton:
 
-* **Format:** `[A-Z]² - [0-9]⁴ - [0-9]³` *(e.g., `IT-2026-001`)*
-* **Regular Expression:** `([A-Z]{2})-([0-9]{4})-([0-9]{3})`
+$$M = (Q, \Sigma, \delta, q_0, F)$$
 
-### 5-Tuple Definition: M = (Q, Σ, δ, q₀, F)
+### Alphabet ($\Sigma$)
 
-* **States ($Q$):** $\{q_0, q_1, q_2, \dots, q_{11}, q_{\text{trap}}\}$
-* **Alphabet ($\Sigma$):** $\{A\dots Z\} \cup \{0\dots 9\} \cup \{'-'\} \quad (\vert{}\Sigma\vert{} = 37)$
-* **Start State:** $q_0$
-* **Accepting / Final State ($F$):** $\{q_{11}\}$
-* **Transition Function ($\delta$):** Static dictionary mapping $(q_i, \sigma) \to q_{i+1}$. Any illegal symbol or unexpected token diverts immediately to $q_{\text{trap}}$.
+$$\Sigma = \Sigma_{\text{alpha}} \cup \Sigma_{\text{digit}} \cup \Sigma_{\text{delim}}$$
 
-```mermaid
-flowchart LR
-    %% Category 1: Prefix
-    subgraph G1 ["Prefix Domain"]
-        q0((q0)) -->|"[A-Z]"| q1((q1))
-        q1 -->|"[A-Z]"| q2((q2))
-    end
+* $\Sigma_{\text{alpha}} = \{ A, B, C, \dots, Z \}$ ($|\Sigma_{\text{alpha}}| = 26$)
+* $\Sigma_{\text{digit}} = \{ 0, 1, 2, \dots, 9 \}$ ($|\Sigma_{\text{digit}}| = 10$)
+* $\Sigma_{\text{delim}} = \{ - \}$ ($|\Sigma_{\text{delim}}| = 1$)
+* Total alphabet size: $|\Sigma| = 26 + 10 + 1 = 37$
 
-    %% Category 2: Year
-    subgraph G2 ["Production Year"]
-        q2 -->|"'-'"| q3((q3))
-        q3 -->|"[0-9]"| q4((q4))
-        q4 -->|"[0-9]"| q5((q5))
-        q5 -->|"[0-9]"| q6((q6))
-        q6 -->|"[0-9]"| q7((q7))
-    end
+Any input character $c \notin \Sigma$ is an alphabet violation and diverts immediately to the dead state $q_{\text{trap}}$.
 
-    %% Category 3: Serial
-    subgraph G3 ["Serial Number"]
-        q7 -->|"'-'"| q8((q8))
-        q8 -->|"[0-9]"| q9((q9))
-        q9 -->|"[0-9]"| q10((q10))
-        q10 -->|"[0-9]"| q11(((q11)))
-    end
+### States ($Q$)
 
-    %% Dead / Trap State
-    q_trap((q_trap)) -->|"Σ"| q_trap
-```
-> **Note on Trap Transitions:** For any state $q_i$ ($0 \le i \le 10$), reading any character other than the designated valid transition symbol directs the machine to the dead state[cite: 2]: $\delta(q_i, \text{other}) = q_{\text{trap}}$, where $\delta(q_{\text{trap}}, \sigma) = q_{\text{trap}}$ for all $\sigma \in \Sigma$[cite: 2].
+$$Q = \{ q_0, q_1, q_2, q_3, q_4, q_5, q_6, q_7, q_8, q_9, q_{10}, q_{11}, q_{\text{trap}} \} \quad (|Q| = 13)$$
+
+* **Start State ($q_0$):** Initial state prior to consuming any input symbol.
+* **Accepting States ($F$):** $F = \{ q_{11} \}$. A string is accepted if and only if the machine halts in $q_{11}$ after consuming all symbols in $w$.
+* **Trap / Dead State ($q_{\text{trap}}$):** Non-accepting universal sink state. For all $\sigma \in \Sigma$, $\delta(q_{\text{trap}}, \sigma) = q_{\text{trap}}$.
+
+### Language & Regular Expression Equivalence
+
+* **Regular Expression:** `[A-Z]{2}-[0-9]{4}-[0-9]{3}`
+* **Fixed Token Length:** $|w| = 11$ symbols.
+
+---
+
+## DFA State Transition Table
+
+The transition function $\delta : Q \times \Sigma \to Q$ governs machine execution across three domains: Category Prefix, Production Year, and Serial Sequence. Any symbol that deviates from the domain transition condition diverts execution to $q_{\text{trap}}$.
+
+| Current State ($q$) | Domain | Valid Symbol ($\sigma$) | Next State ($\delta(q, \sigma)$) | Failure Condition ($\sigma_{\text{invalid}}$) | Next State ($\delta(q, \sigma_{\text{invalid}})$) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| $q_0$ | Prefix (Char 1) | $[A\text{-}Z]$ | $q_1$ | $\sigma \notin [A\text{-}Z]$ | $q_{\text{trap}}$ |
+| $q_1$ | Prefix (Char 2) | $[A\text{-}Z]$ | $q_2$ | $\sigma \notin [A\text{-}Z]$ | $q_{\text{trap}}$ |
+| $q_2$ | Delimiter 1 | `'-'` | $q_3$ | $\sigma \ne \text{'-'}$ | $q_{\text{trap}}$ |
+| $q_3$ | Year (Digit 1) | $[0\text{-}9]$ | $q_4$ | $\sigma \notin [0\text{-}9]$ | $q_{\text{trap}}$ |
+| $q_4$ | Year (Digit 2) | $[0\text{-}9]$ | $q_5$ | $\sigma \notin [0\text{-}9]$ | $q_{\text{trap}}$ |
+| $q_5$ | Year (Digit 3) | $[0\text{-}9]$ | $q_6$ | $\sigma \notin [0\text{-}9]$ | $q_{\text{trap}}$ |
+| $q_6$ | Year (Digit 4) | $[0\text{-}9]$ | $q_7$ | $\sigma \notin [0\text{-}9]$ | $q_{\text{trap}}$ |
+| $q_7$ | Delimiter 2 | `'-'` | $q_8$ | $\sigma \ne \text{'-'}$ | $q_{\text{trap}}$ |
+| $q_8$ | Serial (Digit 1) | $[0\text{-}9]$ | $q_9$ | $\sigma \notin [0\text{-}9]$ | $q_{\text{trap}}$ |
+| $q_9$ | Serial (Digit 2) | $[0\text{-}9]$ | $q_{10}$ | $\sigma \notin [0\text{-}9]$ | $q_{\text{trap}}$ |
+| $q_{10}$ | Serial (Digit 3) | $[0\text{-}9]$ | $q_{11}$ | $\sigma \notin [0\text{-}9]$ | $q_{\text{trap}}$ |
+| $q_{11}$ | Accepting / Halt | None (Input Complete) | - | Any character (Length overflow) | $q_{\text{trap}}$ |
+| $q_{\text{trap}}$ | Dead / Sink State | None | - | $\forall \sigma \in \Sigma$ | $q_{\text{trap}}$ |
+
 ### Domain Prefix Mapping
 
-| Prefix | Category | Example Assets |
+| Prefix | Domain Category | Description |
 | :---: | :--- | :--- |
-| `IT` | IT Equipment | Laptops, Rack Servers, Workstations |
-| `EL` | Electronics | Power Supplies, Microcontrollers, Sensors |
-| `PR` | Peripherals | Mechanical Keyboards, Mice, Monitors |
-| `NW` | Networking | Routers, Switches, Patch Panels |
-| `OF` | Office Hardware | Standing Desks, Ergonomic Chairs |
+| `IT` | IT Equipment | Enterprise workstations, rack servers, laptops |
+| `EL` | Electronics | Power supplies, circuit boards, microcontrollers |
+| `PR` | Peripherals | Displays, human interface devices, mechanical inputs |
+| `NW` | Networking | Switches, routers, transceivers |
+| `OF` | Office Hardware | Infrastructure assets, ergonomic workstations |
 
 ---
 
-## 2. Course Compliance Matrix
+## Architecture & Design Decisions
 
-| # | Requirement | Implementation Detail |
-| :-: | :--- | :--- |
-| **1** | Input Specification | Monospace text entry supporting structured alphanumeric tokens |
-| **2** | Alphabet Validation | Validates against $\Sigma$; illegal characters route directly to $q_{\text{trap}}$ |
-| **3** | Symbol Processing | Iterates symbol-by-symbol using dictionary lookups without regex shortcuts |
-| **4** | State Trace Display | Step-by-step ticker tape displaying $[c]: [q_i] \to [q_{i+1}]$ |
-| **5** | Final State Identification | Reports halting at accepting state $q_{11}$ or non-accepting $q_{\text{trap}}$ |
-| **6** | Decision Output | High-contrast visual verdicts (Emerald ACCEPT / Rose REJECT) |
-| **7** | Persistence & Logging | Saves execution traces and timestamps to MySQL `validation_logs` |
+* **Pure Client-Side Static Architecture:** Built using React 18, Vite, and Tailwind CSS without runtime backend or daemon dependencies.
+* **No Regex Execution Shortcuts:** Input strings are evaluated sequentially symbol-by-symbol against the transition function $\delta(q_i, \sigma)$. Regular expression literals (`/^[A-Z]$/`, `/^[0-9]$/`, `/^-$/`) are restricted to verifying character class membership for individual symbols at each state, preserving the formal step-by-step computational model.
+* **Zero-Daemon Persistence:** Verified assets and audit logs are committed directly to browser `localStorage` synchronously. This removes local database server requirements (e.g., MySQL, MariaDB) and enables zero-cost static deployment to GitHub Pages or static web servers.
 
 ---
 
-## 3. Installation & Setup
+## Project Directory Layout
 
-### Database Setup
-Ensure MySQL/MariaDB is running on port `3306`, then import `schema.sql`:
-
-* **Windows (UniServer Zero XIII):**  
-  Start MySQL, open phpMyAdmin, create `automata_validator`, and import `schema.sql`.
-
-* **Linux (Ubuntu / Debian — Native MariaDB):**
-  ```bash
-  sudo apt update && sudo apt install -y mariadb-server
-  sudo systemctl start mariadb
-  sudo mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS automata_validator;"
-  sudo mysql -u root -p automata_validator < schema.sql
-  ```
-
-* **Linux Optional (Standalone phpMyAdmin via PHP CLI — No Apache):**  
-  To view tables in the browser without installing or configuring Apache:
-  ```bash
-  sudo apt install -y phpmyadmin php-cli php-mbstring php-mysqli
-  php -S 127.0.0.1:8080 -t /usr/share/phpmyadmin
-  ```
-  *Open `http://127.0.0.1:8080` and log in with your MySQL/MariaDB credentials.*
-
-### Application Setup
-```bash
-# 1. Clone & enter repository
-git clone https://github.com/uno-jerome/Product-Validator.git
-cd Product-Validator
-
-# 2. Setup virtual environment
-python -m venv .venv
-# Windows: .venv\Scripts\activate | Linux: source .venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
+```text
+Product-Validator/
+├── src/
+│   ├── core/
+│   │   ├── dfaEngine.js         # Formal 13-state DFA transition logic
+│   │   └── dfaEngine.test.js    # Vitest suite (20 formal test vectors)
+│   ├── services/
+│   │   └── storage.js           # Synchronous localStorage manager
+│   ├── App.jsx                  # Single-file simulator UI, tape, and tables
+│   ├── main.jsx                 # Vite React entry point
+│   └── index.css                # Tailwind directives
+├── package.json
+├── vite.config.js
+└── README.md
 ```
 
 ---
 
-## 4. Execution & Usage
+## Local Setup & Testing Instructions
 
-### Launch Desktop Dashboard
 ```bash
-python main.py
-```
-*Access via native window, or open `http://127.0.0.1:8000` in your browser.*
+# Install dependencies
+npm install
 
-### Run Automated Tests
-```bash
-pytest tests/test_dfa.py -v
+# Run local dev server
+npm run dev
+
+# Run formal test suite (20 vectors)
+npm run test
+
+# Build production static bundle
+npm run build
 ```
 
-### Application Tabs
-* **Scanner & Lookup:** Test arbitrary serial strings or use the preset error buttons (`Valid Code`, `Prefix Error`, `Year Error`, etc.) to trace state transitions symbol-by-symbol.
-* **Register Product:** Fill in inventory fields with a real-time hardware tag preview. The generated serial is verified by the DFA engine prior to database insertion.
-* **Inventory Catalog:** Browse and filter persistent records, or click **Scan** to transfer an item back into the state visualizer.
+---
+
+## Test Cases (20 Formal Vectors)
+
+The validation engine is verified against 20 formal test vectors defined in `src/core/dfaEngine.test.js`.
+
+| Vector # | Input String ($w$) | Expected Verdict | Halting State | Classification / Failure Reason |
+| :---: | :--- | :---: | :---: | :--- |
+| 1 | `IT-2026-001` | Accepted | $q_{11}$ | Valid format (IT Equipment) |
+| 2 | `IT-2024-892` | Accepted | $q_{11}$ | Valid format (IT Equipment) |
+| 3 | `EL-2025-104` | Accepted | $q_{11}$ | Valid format (Electronics) |
+| 4 | `EL-1999-000` | Accepted | $q_{11}$ | Valid format (Electronics) |
+| 5 | `PR-2023-551` | Accepted | $q_{11}$ | Valid format (Peripherals) |
+| 6 | `PR-2026-999` | Accepted | $q_{11}$ | Valid format (Peripherals) |
+| 7 | `NW-2021-042` | Accepted | $q_{11}$ | Valid format (Networking) |
+| 8 | `NW-2026-118` | Accepted | $q_{11}$ | Valid format (Networking) |
+| 9 | `OF-2022-303` | Accepted | $q_{11}$ | Valid format (Office Hardware) |
+| 10 | `OF-2026-015` | Accepted | $q_{11}$ | Valid format (Office Hardware) |
+| 11 | `it-2026-001` | Rejected | $q_{\text{trap}}$ | Alphabet breach (`i` $\notin \Sigma$, lowercase) |
+| 12 | `IT-202-0001` | Rejected | $q_{\text{trap}}$ | Premature delimiter (expected digit at $q_6$, encountered `-`) |
+| 13 | `IT-2026001` | Rejected | $q_{\text{trap}}$ | Missing delimiter (expected delimiter at $q_7$, encountered `0`) |
+| 14 | `I-2026-0001` | Rejected | $q_{\text{trap}}$ | Truncated prefix (expected letter at $q_1$, encountered `-`) |
+| 15 | `ITT-2026-01` | Rejected | $q_{\text{trap}}$ | Prefix overflow (expected delimiter at $q_2$, encountered `T`) |
+| 16 | `IT-2026-00A` | Rejected | $q_{\text{trap}}$ | Character class mismatch (expected digit at $q_{10}$, encountered `A`) |
+| 17 | `NW_2026_001` | Rejected | $q_{\text{trap}}$ | Alphabet breach (`_` $\notin \Sigma$, invalid delimiter) |
+| 18 | `PR-2026-` | Rejected | $q_8$ | Incomplete string ($ | w | = 8 < 11$, halts prior to $F$) |
+| 19 | `IT-2026-0001` | Rejected | $q_{\text{trap}}$ | Length overflow ($ | w | = 12 > 11$, transition beyond $q_{11}$) |
+| 20 | `""` | Rejected | $q_0$ | Empty string ($\epsilon \notin L$, halts at start state) |
