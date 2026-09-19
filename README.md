@@ -20,7 +20,7 @@ $$L = \{ c_1 c_2 - y_1 y_2 y_3 y_4 - s_1 s_2 s_3 \mid c_i \in [A\text{-}Z], \, y
   * [Prerequisites](#prerequisites)
   * [Repository Setup & IDE Initialization](#repository-setup--ide-initialization)
   * [Installation & Execution](#installation--execution)
-* [Test Cases (20 Formal Vectors)](#test-cases-20-formal-vectors)
+* [Test Cases](#test-cases)
 
 ---
 
@@ -164,29 +164,17 @@ npm run build
 
 ---
 
-## Test Cases (20 Formal Vectors)
+## Test Cases
 
-The validation engine is verified against 20 formal test vectors defined in `src/core/dfaEngine.test.js`.
+The validation engine is verified with automated tests in `src/core/dfaEngine.test.js` (`npm run test`). Below are the primary representative cases:
 
-| Vector # | Input String (w) | Expected Verdict | Halting State | Classification / Failure Reason |
-| :---: | :--- | :---: | :---: | :--- |
-| 1 | `IT-2026-001` | Accepted | `q11` | Valid format (IT Equipment) |
-| 2 | `IT-2024-892` | Accepted | `q11` | Valid format (IT Equipment) |
-| 3 | `EL-2025-104` | Accepted | `q11` | Valid format (Electronics) |
-| 4 | `EL-1999-000` | Accepted | `q11` | Valid format (Electronics) |
-| 5 | `PR-2023-551` | Accepted | `q11` | Valid format (Peripherals) |
-| 6 | `PR-2026-999` | Accepted | `q11` | Valid format (Peripherals) |
-| 7 | `NW-2021-042` | Accepted | `q11` | Valid format (Networking) |
-| 8 | `NW-2026-118` | Accepted | `q11` | Valid format (Networking) |
-| 9 | `OF-2022-303` | Accepted | `q11` | Valid format (Office Hardware) |
-| 10 | `OF-2026-015` | Accepted | `q11` | Valid format (Office Hardware) |
-| 11 | `it-2026-001` | Rejected | `q_trap` | Alphabet breach (`i` ∉ Σ, lowercase) |
-| 12 | `IT-202-0001` | Rejected | `q_trap` | Premature delimiter (expected digit at `q6`, encountered `-`) |
-| 13 | `IT-2026001` | Rejected | `q_trap` | Missing delimiter (expected delimiter at `q7`, encountered `0`) |
-| 14 | `I-2026-0001` | Rejected | `q_trap` | Truncated prefix (expected letter at `q1`, encountered `-`) |
-| 15 | `ITT-2026-01` | Rejected | `q_trap` | Prefix overflow (expected delimiter at `q2`, encountered `T`) |
-| 16 | `IT-2026-00A` | Rejected | `q_trap` | Character class mismatch (expected digit at `q10`, encountered `A`) |
-| 17 | `NW_2026_001` | Rejected | `q_trap` | Alphabet breach (`_` ∉ Σ, invalid delimiter) |
-| 18 | `PR-2026-` | Rejected | `q8` | Incomplete string (length 8 < 11, halts at `q8` before accepting state) |
-| 19 | `IT-2026-0001` | Rejected | `q_trap` | Length overflow (length 12 > 11, transition beyond `q11`) |
-| 20 | `""` | Rejected | `q0` | Empty string (ε ∉ L, halts at start state `q0`) |
+| Input String (`w`) | Expected Verdict | Halting State | Classification / Case |
+| :--- | :---: | :---: | :--- |
+| `IT-2026-001` | **Accepted** | `q11` | Valid format (IT Equipment) |
+| `EL-2025-104` | **Accepted** | `q11` | Valid format (Electronics category) |
+| `it-2026-001` | **Rejected** | `q_trap` | Alphabet breach (lowercase `i` ∉ Σ) |
+| `IT-202-001` | **Rejected** | `q_trap` | Year error (expected 4 digits, got 3) |
+| `IT2026-001` | **Rejected** | `q_trap` | Delimiter error (missing hyphen `-`) |
+| `PR-2026-` | **Rejected** | `q8` | Incomplete string (halts before accepting state `q11`) |
+| `IT-2026-0001` | **Rejected** | `q_trap` | Length overflow (12 characters, exceeds 11) |
+| `""` | **Rejected** | `q0` | Empty string (ε ∉ L, halts at start state `q0`) |
