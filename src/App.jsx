@@ -19,15 +19,6 @@ const CATEGORIES = [
   { id: 'OF', name: 'Office Furniture & Supplies' }
 ];
 
-const DOMAIN_GROUPS = [
-  { label: '⊔', width: 'w-14 sm:w-16', cls: 'text-slate-400 dark:text-slate-600 border-transparent font-mono' },
-  { label: 'Prefix', width: 'w-28 sm:w-32', cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
-  { label: '—', width: 'w-14 sm:w-16', cls: 'text-slate-400 dark:text-slate-600 border-transparent font-mono' },
-  { label: 'Year', width: 'w-56 sm:w-64', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
-  { label: '—', width: 'w-14 sm:w-16', cls: 'text-slate-400 dark:text-slate-600 border-transparent font-mono' },
-  { label: 'Serial', width: 'w-[168px] sm:w-48', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-  { label: '⊔', width: 'w-14 sm:w-16', cls: 'text-slate-400 dark:text-slate-600 border-transparent font-mono' }
-];
 
 const Table = ({ headers, rows, emptyMsg }) => !rows.length ? (
   <div className="py-8 text-center font-mono text-xs text-slate-400 dark:text-slate-500">{emptyMsg}</div>
@@ -119,7 +110,6 @@ export default function App() {
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
           <div><h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">DFA Product Code Validator</h1><p className="text-xs sm:text-sm font-mono text-slate-500 dark:text-slate-400 mt-1">M = (Q, Σ, δ, q0, F) • 13 States • |Σ| = 37</p></div>
           <div className="flex items-center gap-3">
-            <div className="px-3 py-1 rounded-full text-xs font-mono font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 shadow-sm">CCAUTOMA Project</div>
             <button onClick={() => setThemeState((p) => p === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme" className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-colors">
               {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-600" />}<span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
@@ -165,20 +155,18 @@ export default function App() {
 
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">Authentic Automata Read-Tape</span>
+                  <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">Character Verification Tape</span>
                   {activeStep !== null && (
                     <span className="text-[11px] font-mono text-blue-500 dark:text-blue-400 flex items-center gap-1.5 animate-pulse">
-                      <span className="w-2 h-2 rounded-full bg-blue-500" /> Read-Head Active (Step {activeStep + 1})
+                      <span className="w-2 h-2 rounded-full bg-blue-500" /> Inspecting Step {activeStep + 1}
                     </span>
                   )}
                 </div>
 
                 <div className="w-full overflow-x-auto pb-4 pt-2 flex justify-center">
-                  <div className="inline-flex flex-col items-center min-w-fit max-w-4xl mx-auto w-full">
-                    <div className="inline-flex rounded-xl border divide-x overflow-hidden shadow-sm border-slate-300 divide-slate-200 bg-white dark:border-slate-700 dark:divide-slate-700 dark:bg-slate-900/80">
-                      <div className="w-14 h-18 sm:w-16 sm:h-20 flex items-center justify-center font-mono text-2xl sm:text-3xl font-bold select-none text-slate-400 dark:text-slate-600 bg-slate-100/50 dark:bg-slate-900/40">
-                        ⊔
-                      </div>
+                  <div className="flex flex-col items-center max-w-4xl w-full">
+                    {/* 11 Continuous Tape Cells */}
+                    <div className="inline-flex rounded-xl border border-slate-300 dark:border-slate-700 divide-x divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900/90 shadow-lg overflow-hidden w-full justify-between">
                       {Array.from({ length: 11 }).map((_, i) => {
                         const char = input[i] || '·';
                         const isTrap = trapIndex !== -1 && i === trapIndex && (activeStep === null || activeStep >= i);
@@ -194,41 +182,40 @@ export default function App() {
                           : 'opacity-40 text-slate-400 dark:text-slate-600';
 
                         return (
-                          <div key={i} className={`w-14 h-18 sm:w-16 sm:h-20 flex items-center justify-center font-mono text-2xl sm:text-3xl font-bold tracking-wider transition-colors ${cellCls}`}>
+                          <div key={i} className={`w-16 h-20 sm:w-18 sm:h-22 min-w-[64px] max-w-[76px] flex-1 flex items-center justify-center font-mono text-2xl sm:text-3xl font-bold transition-colors ${cellCls}`}>
                             {char}
                           </div>
                         );
                       })}
-                      <div className="w-14 h-18 sm:w-16 sm:h-20 flex items-center justify-center font-mono text-2xl sm:text-3xl font-bold select-none text-slate-400 dark:text-slate-600 bg-slate-100/50 dark:bg-slate-900/40">
-                        ⊔
-                      </div>
                     </div>
 
-                    <div className="inline-flex">
-                      <div className="w-14 sm:w-16 text-xs sm:text-sm font-mono font-semibold mt-2 text-center text-slate-400/50 dark:text-slate-600">
-                        q0
-                      </div>
+                    {/* State Row: q1 through q11 */}
+                    <div className="flex w-full justify-between mt-2 px-1 text-xs sm:text-sm font-mono text-slate-400">
                       {Array.from({ length: 11 }).map((_, i) => {
                         const isTrap = trapIndex !== -1 && i === trapIndex && (activeStep === null || activeStep >= i);
                         const isUnreached = (trapIndex !== -1 && i > trapIndex) || (activeStep !== null && i > activeStep) || i >= dfa.trace.length;
                         const state = isTrap ? 'q_trap' : isUnreached ? '·' : (dfa.trace[i]?.toState || '·');
                         return (
-                          <div key={i} className={`w-14 sm:w-16 text-xs sm:text-sm font-mono font-semibold mt-2 text-center transition-colors ${isTrap ? 'text-rose-500 font-bold' : isUnreached ? 'text-slate-400/40 dark:text-slate-600' : 'text-slate-400'}`}>
+                          <div key={i} className={`flex-1 text-center transition-colors ${isTrap ? 'text-rose-500 font-bold' : isUnreached ? 'text-slate-400/40 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'}`}>
                             {state}
                           </div>
                         );
                       })}
-                      <div className="w-14 sm:w-16 text-xs sm:text-sm font-mono font-semibold mt-2 text-center text-slate-400/50 dark:text-slate-600">
-                        ·
-                      </div>
                     </div>
 
-                    <div className="inline-flex mt-2 items-center">
-                      {DOMAIN_GROUPS.map((g, idx) => (
-                        <span key={idx} className={`${g.width} text-center py-1 text-xs font-semibold tracking-wide uppercase rounded border ${g.cls}`}>
-                          {g.label}
-                        </span>
-                      ))}
+                    {/* Domain Row: Prefix (2 cells), -, Year (4 cells), -, Serial (3 cells) */}
+                    <div className="flex w-full gap-2 mt-2">
+                      <div className="flex-[2] py-1 text-center rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold">
+                        PREFIX
+                      </div>
+                      <div className="w-8 py-1 text-center text-slate-400 dark:text-slate-600 text-xs">—</div>
+                      <div className="flex-[4] py-1 text-center rounded border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+                        YEAR
+                      </div>
+                      <div className="w-8 py-1 text-center text-slate-400 dark:text-slate-600 text-xs">—</div>
+                      <div className="flex-[3] py-1 text-center rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                        SERIAL
+                      </div>
                     </div>
                   </div>
                 </div>

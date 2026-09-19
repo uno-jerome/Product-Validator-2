@@ -89,25 +89,35 @@ The transition function $\delta : Q \times \Sigma \to Q$ governs machine executi
 ## Architecture & Design Decisions
 
 * **Pure Client-Side Static Architecture:** Built using React 18, Vite, and Tailwind CSS without runtime backend or daemon dependencies.
-* **No Regex Execution Shortcuts:** Input strings are evaluated sequentially symbol-by-symbol against the transition function $\delta(q_i, \sigma)$. Regular expression literals (`/^[A-Z]$/`, `/^[0-9]$/`, `/^-$/`) are restricted to verifying character class membership for individual symbols at each state, preserving the formal step-by-step computational model.
-* **Zero-Daemon Persistence:** Verified assets and audit logs are committed directly to browser `localStorage` synchronously. This removes local database server requirements (e.g., MySQL, MariaDB) and enables zero-cost static deployment to GitHub Pages or static web servers.
+* **Formal Sequential Computation:** Input strings are evaluated sequentially symbol-by-symbol against the transition function $\delta(q_i, \sigma)$. Regular expression literals (`/^[A-Z]$/`, `/^[0-9]$/`, `/^-$/`) are restricted to verifying character class membership for individual symbols at each state, preserving the formal step-by-step computational model.
+* **Character Verification Tape Visualization:** A continuous, unified 11-cell horizontal read-tape dynamically renders machine transitions:
+  * **Contiguous Cells:** 11 monospace character cells that display input symbols or dim placeholder dots (`·`).
+  * **Sequential Sweep Animation:** A 45ms step-by-step read-head sweep visually tracks the automaton scanning the tape.
+  * **Instant Visual Halting:** Invalid symbols divert the cell to a prominent rose highlight halting at $q_{\text{trap}}$ and graying out remaining cells.
+  * **Aligned State & Domain Rows:** Resulting states ($q_1 \dots q_{11}$) and domain spans (`PREFIX`, `YEAR`, `SERIAL`) align directly under their respective cells.
+* **Interactive Features & Persistence:**
+  * **Audit History & Replay:** Logs validation attempts with timestamp, halting state, and verdict, allowing one-click replay.
+  * **Inventory Catalog:** Product registration with automatic sample generation and synchronous `localStorage` persistence.
+  * **Dark / Light Mode:** Built-in theme switcher with client-side preference caching.
 
 ---
 
 ## Project Directory Layout
 
 ```text
-Product-Validator/
+Product-Validator-2/
 ├── src/
 │   ├── core/
 │   │   ├── dfaEngine.js         # Formal 13-state DFA transition logic
 │   │   └── dfaEngine.test.js    # Vitest suite (20 formal test vectors)
 │   ├── services/
-│   │   └── storage.js           # Synchronous localStorage manager
-│   ├── App.jsx                  # Single-file simulator UI, tape, and tables
+│   │   ├── storage.js           # Synchronous localStorage manager
+│   │   └── storage.test.js      # LocalStorage CRUD test suite
+│   ├── App.jsx                  # Main simulator UI, tape, and tables
 │   ├── main.jsx                 # Vite React entry point
-│   └── index.css                # Tailwind directives
+│   └── index.css                # Tailwind base & custom scrollbar styles
 ├── package.json
+├── tailwind.config.js           # Custom monospace fonts and dimension tokens
 ├── vite.config.js
 └── README.md
 ```
