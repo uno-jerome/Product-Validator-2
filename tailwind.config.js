@@ -11,6 +11,9 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      spacing: {
+        18: '4.5rem',
+      },
     },
   },
   plugins: [],
