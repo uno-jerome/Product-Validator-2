@@ -95,8 +95,10 @@ export default function App() {
     if (!productName.trim()) return setFormMsg({ type: 'err', text: 'Product name is required.' });
     const code = input.trim().toUpperCase(), res = validateProductCode(code);
     if (!res.isValid) return setFormMsg({ type: 'err', text: `Invalid serial code: ${res.errorReason || 'DFA rejected'}` });
-    const registeredDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    setProducts(saveProduct({ code, category, name: productName.trim(), registeredDate }));
+    const now = new Date();
+    const registeredDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const registeredTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setProducts(saveProduct({ code, category, name: productName.trim(), registeredDate, registeredTime }));
     setProductName(''); setFormMsg({ type: 'ok', text: `Registered "${code}" successfully!` }); setInput(generateSampleCode(category));
   };
 
@@ -287,7 +289,16 @@ export default function App() {
                 key: p.code, cells: [
                   { val: <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">{p.category}</span> },
                   { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100' }, { val: p.name, cls: 'text-slate-700 dark:text-slate-300 font-sans' },
-                  { val: p.registeredDate || 'N/A', cls: 'text-slate-400 dark:text-slate-500 text-[11px]' },
+                  { val: (
+                    <span className="whitespace-nowrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                      <span>{p.registeredDate || 'N/A'}</span>
+                      {p.registeredTime && (
+                        <span className="ml-1 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500">
+                          {p.registeredTime}
+                        </span>
+                      )}
+                    </span>
+                  ), cls: 'text-slate-400 dark:text-slate-500' },
                   { val: (
                     <div className="flex items-center justify-end gap-3 font-mono text-xs">
                       <button
