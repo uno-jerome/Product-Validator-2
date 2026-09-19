@@ -163,8 +163,8 @@ export default function App() {
                   )}
                 </div>
 
-                <div className="w-full overflow-x-auto pb-4 pt-2 flex justify-center">
-                  <div className="flex flex-col items-center max-w-4xl w-full">
+                <div className="w-full overflow-x-auto pb-4 pt-2 flex justify-start sm:justify-center">
+                  <div className="flex flex-col items-center min-w-max sm:w-full sm:max-w-4xl px-2">
                     {/* 11 Continuous Tape Cells */}
                     <div className="inline-flex rounded-xl border border-slate-300 dark:border-slate-700 divide-x divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900/90 shadow-lg overflow-hidden w-full justify-between">
                       {Array.from({ length: 11 }).map((_, i) => {
@@ -182,7 +182,7 @@ export default function App() {
                           : 'opacity-40 text-slate-400 dark:text-slate-600';
 
                         return (
-                          <div key={i} className={`w-16 h-20 sm:w-18 sm:h-22 min-w-[64px] max-w-[76px] flex-1 flex items-center justify-center font-mono text-2xl sm:text-3xl font-bold transition-colors ${cellCls}`}>
+                          <div key={i} className={`w-7 h-10 sm:w-14 sm:h-18 md:w-16 md:h-20 flex-1 flex items-center justify-center font-mono text-sm sm:text-2xl md:text-3xl font-bold transition-colors ${cellCls}`}>
                             {char}
                           </div>
                         );
@@ -190,7 +190,7 @@ export default function App() {
                     </div>
 
                     {/* State Row: q1 through q11 */}
-                    <div className="flex w-full justify-between mt-2 px-1 text-xs sm:text-sm font-mono text-slate-400">
+                    <div className="flex w-full justify-between mt-1 sm:mt-2 px-1 text-[10px] sm:text-xs md:text-sm font-mono text-slate-400">
                       {Array.from({ length: 11 }).map((_, i) => {
                         const isTrap = trapIndex !== -1 && i === trapIndex && (activeStep === null || activeStep >= i);
                         const isUnreached = (trapIndex !== -1 && i > trapIndex) || (activeStep !== null && i > activeStep) || i >= dfa.trace.length;
@@ -204,16 +204,16 @@ export default function App() {
                     </div>
 
                     {/* Domain Row: Prefix (2 cells), -, Year (4 cells), -, Serial (3 cells) */}
-                    <div className="flex w-full gap-2 mt-2">
-                      <div className="flex-[2] py-1 text-center rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold">
+                    <div className="flex w-full gap-1 sm:gap-2 mt-1.5 sm:mt-2">
+                      <div className="flex-[2] py-0.5 sm:py-1 text-center rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] sm:text-xs font-semibold">
                         PREFIX
                       </div>
-                      <div className="w-8 py-1 text-center text-slate-400 dark:text-slate-600 text-xs">—</div>
-                      <div className="flex-[4] py-1 text-center rounded border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+                      <div className="w-4 sm:w-8 py-0.5 sm:py-1 text-center text-slate-400 dark:text-slate-600 text-[9px] sm:text-xs">—</div>
+                      <div className="flex-[4] py-0.5 sm:py-1 text-center rounded border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] sm:text-xs font-semibold">
                         YEAR
                       </div>
-                      <div className="w-8 py-1 text-center text-slate-400 dark:text-slate-600 text-xs">—</div>
-                      <div className="flex-[3] py-1 text-center rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                      <div className="w-4 sm:w-8 py-0.5 sm:py-1 text-center text-slate-400 dark:text-slate-600 text-[9px] sm:text-xs">—</div>
+                      <div className="flex-[3] py-0.5 sm:py-1 text-center rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] sm:text-xs font-semibold">
                         SERIAL
                       </div>
                     </div>
