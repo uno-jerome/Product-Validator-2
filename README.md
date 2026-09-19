@@ -4,6 +4,24 @@ A formal deterministic finite automaton simulator and inventory asset validator 
 
 ---
 
+## Table of Contents
+
+* [Formal Automata Specification](#formal-automata-specification)
+  * [Alphabet ($\Sigma$)](#alphabet-\sigma)
+  * [States ($Q$)](#states-q)
+  * [Language & Regular Expression Equivalence](#language--regular-expression-equivalence)
+* [DFA State Transition Table](#dfa-state-transition-table)
+  * [Domain Prefix Mapping](#domain-prefix-mapping)
+* [Architecture & Design Decisions](#architecture--design-decisions)
+* [Project Directory Layout](#project-directory-layout)
+* [Local Setup & Testing Instructions](#local-setup--testing-instructions)
+  * [Prerequisites](#prerequisites)
+  * [Repository Setup & IDE Initialization](#repository-setup--ide-initialization)
+  * [Installation & Execution](#installation--execution)
+* [Test Cases (20 Formal Vectors)](#test-cases-20-formal-vectors)
+
+---
+
 ## Formal Automata Specification
 
 The machine is defined as a 5-tuple Deterministic Finite Automaton:
@@ -97,6 +115,27 @@ Product-Validator/
 ---
 
 ## Local Setup & Testing Instructions
+
+### Prerequisites
+
+* Node.js $\ge$ 18.0.0
+* npm $\ge$ 9.0.0
+* Git
+
+### Repository Setup & IDE Initialization
+
+```bash
+# 1. Clone repository from GitHub
+git clone https://github.com/uno-jerome/Product-Validator-2.git
+
+# 2. Enter project directory
+cd Product-Validator-2
+
+# 3. Open project in IDE / code editor
+code .
+```
+
+### Installation & Execution
 
 ```bash
 # Install dependencies
