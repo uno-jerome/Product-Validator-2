@@ -1,6 +1,6 @@
 # Deterministic Finite Automaton (DFA) - Product Code Validator
 
-A formal deterministic finite automaton simulator and inventory asset validator recognizing the regular language:
+A formal deterministic finite automaton simulator and inventory product validator recognizing the regular language:
 
 $$L = \{ c_1 c_2 - y_1 y_2 y_3 y_4 - s_1 s_2 s_3 \mid c_i \in [A\text{-}Z], \, y_i, s_i \in [0\text{-}9] \}$$
 
@@ -31,6 +31,7 @@ The machine is defined as a 5-tuple Deterministic Finite Automaton:
 $$M = (Q, \Sigma, \delta, q_0, F)$$
 
 <a id="alphabet"></a>
+
 ### Alphabet (Σ)
 
 $$\Sigma = \Sigma_{\text{alpha}} \cup \Sigma_{\text{digit}} \cup \Sigma_{\text{delim}}$$
@@ -43,6 +44,7 @@ $$\Sigma = \Sigma_{\text{alpha}} \cup \Sigma_{\text{digit}} \cup \Sigma_{\text{d
 Any input character $c \notin \Sigma$ is an alphabet violation and diverts execution immediately to the trap state $q_{\text{trap}}$.
 
 <a id="states"></a>
+
 ### States (Q)
 
 $$Q = \{ q_0, q_1, q_2, q_3, q_4, q_5, q_6, q_7, q_8, q_9, q_{10}, q_{11}, q_{\text{trap}} \} \quad (|Q| = 13)$$
