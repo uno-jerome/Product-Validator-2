@@ -131,8 +131,6 @@ git clone https://github.com/uno-jerome/Product-Validator-2.git
 # 2. Enter project directory
 cd Product-Validator-2
 
-# 3. Open project in IDE / code editor
-code .
 ```
 
 ### Installation & Execution
