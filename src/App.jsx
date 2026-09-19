@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Sun, Moon, CheckCircle2, XCircle, RotateCcw, Trash2 } from 'lucide-react';
+import { Sun, Moon, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 import { validateProductCode, generateSampleCode } from './core/dfaEngine';
 import { getProducts, saveProduct, deleteProduct, getLogs, saveLog, clearLogs, getTheme, setTheme } from './services/storage';
 
@@ -88,6 +88,7 @@ export default function App() {
   const handleValidate = () => { recordLog(input, dfa); runAnimation(dfa.trace); };
   const handleRunPreset = (val) => { setInput(val); const res = validateProductCode(val); recordLog(val, res); runAnimation(res.trace); };
   const handleReplayLog = (code) => { setActiveTab('simulator'); setInput(code); const res = validateProductCode(code); recordLog(code, res); runAnimation(res.trace); };
+  const handleScanProduct = (code) => { setActiveTab('simulator'); setInput(code); const res = validateProductCode(code); recordLog(code, res); runAnimation(res.trace); };
 
   const handleRegisterProduct = (e) => {
     e.preventDefault(); setFormMsg(null);
@@ -287,7 +288,26 @@ export default function App() {
                   { val: <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">{p.category}</span> },
                   { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100' }, { val: p.name, cls: 'text-slate-700 dark:text-slate-300 font-sans' },
                   { val: p.registeredDate || 'N/A', cls: 'text-slate-400 dark:text-slate-500 text-[11px]' },
-                  { val: <button type="button" onClick={() => setProducts(deleteProduct(p.code))} aria-label={`Delete ${p.code}`} className="p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>, cls: 'text-right' }
+                  { val: (
+                    <div className="flex items-center justify-end gap-3 font-mono text-xs">
+                      <button
+                        type="button"
+                        onClick={() => handleScanProduct(p.code)}
+                        aria-label={`Scan ${p.code}`}
+                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors"
+                      >
+                        Scan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProducts(deleteProduct(p.code))}
+                        aria-label={`Delete ${p.code}`}
+                        className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ), cls: 'text-right' }
                 ]
               }))} />
             </section>
