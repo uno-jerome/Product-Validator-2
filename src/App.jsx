@@ -181,10 +181,10 @@ export default function App() {
                         const cellCls = isTrap
                           ? 'bg-rose-500/20 text-rose-500 border-rose-500 font-bold ring-1 ring-inset ring-rose-500'
                           : isActive
-                          ? 'bg-blue-500/20 text-blue-400 dark:text-blue-300 ring-1 ring-inset ring-blue-500'
-                          : isDone
-                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold'
-                          : 'opacity-40 text-slate-400 dark:text-slate-600';
+                            ? 'bg-blue-500/20 text-blue-400 dark:text-blue-300 ring-1 ring-inset ring-blue-500'
+                            : isDone
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold'
+                              : 'opacity-40 text-slate-400 dark:text-slate-600';
 
                         return (
                           <div
@@ -206,13 +206,12 @@ export default function App() {
                         return (
                           <div
                             key={i}
-                            className={`flex-1 min-w-0 text-center font-mono text-[10px] sm:text-xs md:text-sm transition-colors ${
-                              isTrap
+                            className={`flex-1 min-w-0 text-center font-mono text-[10px] sm:text-xs md:text-sm transition-colors ${isTrap
                                 ? 'text-rose-500 font-bold'
                                 : isUnreached
-                                ? 'text-slate-400/40 dark:text-slate-600'
-                                : 'text-slate-500 dark:text-slate-400'
-                            }`}
+                                  ? 'text-slate-400/40 dark:text-slate-600'
+                                  : 'text-slate-500 dark:text-slate-400'
+                              }`}
                           >
                             {state}
                           </div>
@@ -275,7 +274,7 @@ export default function App() {
                   </div>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button type="button" onClick={() => { setInput(generateSampleCode(category)); setFormMsg(null); }} className={btnSec}>Generate Valid</button>
+                  <button type="button" onClick={() => { setInput(generateSampleCode(category)); setFormMsg(null); }} className={btnSec}>Generate Code</button>
                   <button type="submit" className="px-5 py-2 text-xs font-mono font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors">Register Product</button>
                 </div>
               </form>
@@ -289,36 +288,40 @@ export default function App() {
                 key: p.code, cells: [
                   { val: <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">{p.category}</span> },
                   { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100' }, { val: p.name, cls: 'text-slate-700 dark:text-slate-300 font-sans' },
-                  { val: (
-                    <span className="whitespace-nowrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                      <span>{p.registeredDate || 'N/A'}</span>
-                      {p.registeredTime && (
-                        <span className="ml-1 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500">
-                          {p.registeredTime}
-                        </span>
-                      )}
-                    </span>
-                  ), cls: 'text-slate-400 dark:text-slate-500' },
-                  { val: (
-                    <div className="flex items-center justify-end gap-3 font-mono text-xs">
-                      <button
-                        type="button"
-                        onClick={() => handleScanProduct(p.code)}
-                        aria-label={`Scan ${p.code}`}
-                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors"
-                      >
-                        Scan
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setProducts(deleteProduct(p.code))}
-                        aria-label={`Delete ${p.code}`}
-                        className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ), cls: 'text-right' }
+                  {
+                    val: (
+                      <span className="whitespace-nowrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                        <span>{p.registeredDate || 'N/A'}</span>
+                        {p.registeredTime && (
+                          <span className="ml-1 text-[10px] sm:text-xs text-slate-400 dark:text-slate-500">
+                            {p.registeredTime}
+                          </span>
+                        )}
+                      </span>
+                    ), cls: 'text-slate-400 dark:text-slate-500'
+                  },
+                  {
+                    val: (
+                      <div className="flex items-center justify-end gap-3 font-mono text-xs">
+                        <button
+                          type="button"
+                          onClick={() => handleScanProduct(p.code)}
+                          aria-label={`Scan ${p.code}`}
+                          className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors"
+                        >
+                          Scan
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setProducts(deleteProduct(p.code))}
+                          aria-label={`Delete ${p.code}`}
+                          className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ), cls: 'text-right'
+                  }
                 ]
               }))} />
             </section>
