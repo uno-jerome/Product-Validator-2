@@ -207,10 +207,10 @@ export default function App() {
                           <div
                             key={i}
                             className={`flex-1 min-w-0 text-center font-mono text-[10px] sm:text-xs md:text-sm transition-colors ${isTrap
-                                ? 'text-rose-500 font-bold'
-                                : isUnreached
-                                  ? 'text-slate-400/40 dark:text-slate-600'
-                                  : 'text-slate-500 dark:text-slate-400'
+                              ? 'text-rose-500 font-bold'
+                              : isUnreached
+                                ? 'text-slate-400/40 dark:text-slate-600'
+                                : 'text-slate-500 dark:text-slate-400'
                               }`}
                           >
                             {state}
