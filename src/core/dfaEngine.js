@@ -1,7 +1,7 @@
 // M = (Q, Σ, δ, q0, F)
 export const SIGMA = /^[A-Z0-9-]$/;
 
-export const STAGES = [
+const STAGES = [
   { from: 'q0',  to: 'q1',  valid: /^[A-Z]$/, domain: 'Prefix' },
   { from: 'q1',  to: 'q2',  valid: /^[A-Z]$/, domain: 'Prefix' },
   { from: 'q2',  to: 'q3',  valid: /^-$/,     domain: 'Delimiter' },
