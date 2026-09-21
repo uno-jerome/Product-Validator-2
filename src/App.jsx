@@ -20,7 +20,10 @@ const CATEGORIES = [
 ];
 
 
-const BTN_SEC = "px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors";
+const STATUS_CLS = {
+  ok: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400',
+  err: 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'
+};
 const INP_CLS = "w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:border-slate-500 text-slate-900 dark:text-slate-100";
 const LBL_CLS = "block text-xs font-mono font-medium text-slate-600 dark:text-slate-400 mb-1";
 const CARD_CLS = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6 space-y-4 shadow-sm";
@@ -74,6 +77,11 @@ export default function App() {
     }
   };
 
+  const resetAnimation = () => {
+    clearTimer();
+    setActiveStep(null);
+  };
+
   useEffect(() => { document.documentElement.classList.toggle('dark', theme === 'dark'); setTheme(theme); }, [theme]);
   useEffect(() => { setProducts(getProducts()); setLogs(getLogs()); return () => clearTimer(); }, []);
 
@@ -84,9 +92,8 @@ export default function App() {
     const char = input[i] || '·';
     const isTrap = trapIndex !== -1 && i === trapIndex && (activeStep === null || activeStep >= i);
     const isActive = activeStep === i;
-    const isGray = (trapIndex !== -1 && i > trapIndex) || (activeStep !== null && i > activeStep) || !input[i];
-    const isDone = !isTrap && !isActive && !isGray && i < input.length;
     const isUnreached = (trapIndex !== -1 && i > trapIndex) || (activeStep !== null && i > activeStep) || i >= dfa.trace.length;
+    const isDone = !isTrap && !isActive && !isUnreached;
 
     return {
       char,
@@ -132,7 +139,6 @@ export default function App() {
   const displayedProducts = useMemo(() => products.slice(0, catalogLimit), [products, catalogLimit]);
 
   const recordLog = (code, res) => {
-    if (logs.some(entry => entry.input === code)) return;
     setLogs(saveValidationLog({
       id: Date.now() + Math.random(), input: code, isValid: res.isValid, state: res.finalState,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -149,7 +155,7 @@ export default function App() {
   };
 
   const handleValidate = () => { recordLog(input, dfa); runAnimation(dfa.trace, trapIndex); };
-  const handleClearInput = () => { clearTimer(); setActiveStep(null); setInput(''); };
+  const handleClearInput = () => { resetAnimation(); setInput(''); };
 
   const handleRegisterProduct = (e) => {
     e.preventDefault(); setFormMsg(null);
@@ -176,7 +182,7 @@ export default function App() {
         <header className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Product Code Validator</h1>
-            <p className="text-[11px] sm:text-sm font-mono text-slate-500 dark:text-slate-400 mt-0.5 truncate sm:overflow-visible">M = (Q, Σ, δ, q0, F) • 13 States • |Σ| = 37</p>
+            <p className="text-[11px] sm:text-sm font-mono text-slate-500 dark:text-slate-400 mt-0.5">M = (Q, Σ, δ, q0, F) • 13 States • |Σ| = 37</p>
           </div>
           <button onClick={() => setThemeState((p) => p === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme" className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-colors shrink-0">
             {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-600" />}
@@ -196,7 +202,7 @@ export default function App() {
               <div className="space-y-2">
                 <label htmlFor="serial-input" className={LBL_CLS}>Serial Code Input</label>
                 <div className="flex flex-col sm:flex-row gap-2.5">
-                  <input id="serial-input" type="text" value={input} onChange={(e) => { clearTimer(); setActiveStep(null); setInput(e.target.value.toUpperCase()); }} placeholder="e.g. IT-2026-001" className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-slate-500 rounded-lg px-4 py-2.5 font-mono text-base sm:text-lg text-slate-900 dark:text-slate-100 uppercase tracking-widest outline-none transition-colors" />
+                  <input id="serial-input" type="text" value={input} onChange={(e) => { resetAnimation(); setInput(e.target.value.toUpperCase()); }} placeholder="e.g. IT-2026-001" className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-slate-500 rounded-lg px-4 py-2.5 font-mono text-base sm:text-lg text-slate-900 dark:text-slate-100 uppercase tracking-widest outline-none transition-colors" />
                   <div className="flex gap-2 sm:w-auto">
                     <button type="button" onClick={handleValidate} className="flex-[3] sm:flex-none px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-semibold rounded-lg shadow-sm transition-colors">Validate</button>
                     <button type="button" onClick={handleClearInput} className="flex-[1] sm:flex-none px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">Clear</button>
@@ -213,7 +219,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className={`p-3.5 sm:p-4 rounded-xl border font-mono text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-colors ${dfa.isValid ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'}`}>
+              <div className={`p-3.5 sm:p-4 rounded-xl border font-mono text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-colors ${dfa.isValid ? STATUS_CLS.ok : STATUS_CLS.err}`}>
                 <div className="flex items-center gap-2.5">
                   {dfa.isValid ? <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" /> : <XCircle className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />}
                   <span className="font-semibold text-xs sm:text-sm">{dfa.isValid ? 'ACCEPTED (State: q11) — Valid Serial Code' : `REJECTED (State: ${dfa.finalState}) — ${dfa.errorReason || 'Input rejected'}`}</span>
@@ -232,43 +238,45 @@ export default function App() {
                 </div>
 
                 <div className="w-full overflow-x-auto pb-2 pt-1">
-                  <div className="flex flex-col items-center w-full min-w-[310px] max-w-4xl mx-auto">
-                    {/* 11 Continuous Tape Cells */}
-                    <div className="flex w-full rounded-xl border border-slate-300 dark:border-slate-700 divide-x divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900/90 shadow-md overflow-hidden">
-                      {tapeCells.map((c, i) => (
-                        <div
-                          key={i}
-                          className={`flex-1 min-w-0 h-12 sm:h-18 md:h-22 flex items-center justify-center font-mono text-base sm:text-2xl md:text-3xl font-bold transition-colors ${c.cellCls}`}
-                        >
-                          {c.char}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* State Row: q1 through q11 */}
-                    <div className="grid grid-cols-11 w-full mt-2 px-0.5 text-slate-400">
-                      {tapeCells.map((c, i) => (
-                        <div
-                          key={i}
-                          className={`text-center font-mono text-[9px] sm:text-xs md:text-sm truncate transition-colors ${c.stateCls}`}
-                        >
-                          {c.state}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Domain Row: Prefix (2 cells), -, Year (4 cells), -, Serial (3 cells) */}
-                    <div className="grid grid-cols-11 w-full items-center mt-2 px-0.5 gap-0.5 text-center">
-                      <div className="col-span-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
-                        PREFIX
+                  <div className="w-max min-w-full mx-auto flex flex-col items-center">
+                    <div className="w-full min-w-[480px] max-w-4xl flex flex-col items-center">
+                      {/* 11 Continuous Tape Cells */}
+                      <div className="flex w-full rounded-xl border border-slate-300 dark:border-slate-700 divide-x divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900/90 shadow-md overflow-hidden">
+                        {tapeCells.map((c, i) => (
+                          <div
+                            key={i}
+                            className={`flex-1 min-w-0 h-12 sm:h-18 md:h-22 flex items-center justify-center font-mono text-base sm:text-2xl md:text-3xl font-bold transition-colors ${c.cellCls}`}
+                          >
+                            {c.char}
+                          </div>
+                        ))}
                       </div>
-                      <div className="col-span-1 text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
-                      <div className="col-span-4 py-1 rounded border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
-                        YEAR
+
+                      {/* State Row: q1 through q11 */}
+                      <div className="grid grid-cols-11 w-full mt-2 px-0.5 text-slate-400">
+                        {tapeCells.map((c, i) => (
+                          <div
+                            key={i}
+                            className={`text-center font-mono text-[10px] sm:text-xs md:text-sm truncate transition-colors ${c.stateCls}`}
+                          >
+                            {c.state}
+                          </div>
+                        ))}
                       </div>
-                      <div className="col-span-1 text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
-                      <div className="col-span-3 py-1 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
-                        SERIAL
+
+                      {/* Domain Row: Prefix (2 cells), -, Year (4 cells), -, Serial (3 cells) */}
+                      <div className="grid grid-cols-11 w-full items-center mt-2 px-0.5 text-center">
+                        <div className="col-span-2 py-1 mx-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
+                          PREFIX
+                        </div>
+                        <div className="col-span-1 text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
+                        <div className="col-span-4 py-1 mx-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
+                          YEAR
+                        </div>
+                        <div className="col-span-1 text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
+                        <div className="col-span-3 py-1 mx-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
+                          SERIAL
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -299,10 +307,10 @@ export default function App() {
               </div>
               <Table emptyMsg="No validation logs recorded. Validate an input or click a preset above." headers={['Input String', 'Result', 'Final State', 'Timestamp', { title: 'Actions', cls: 'text-right' }]} rows={displayedLogs.map((l) => ({
                 key: l.id, cells: [
-                  { val: l.input || 'ε', cls: 'font-bold text-slate-900 dark:text-slate-100' },
-                  { val: <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${l.isValid ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'}`}>{l.isValid ? 'ACCEPTED' : 'REJECTED'}</span> },
-                  { val: l.state, cls: 'text-slate-600 dark:text-slate-300' }, { val: l.time, cls: 'text-slate-400 dark:text-slate-500 text-[11px]' },
-                  { val: <button type="button" onClick={() => handleSimulate(l.input)} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"><RotateCcw className="w-3 h-3" /> Replay</button>, cls: 'text-right' }
+                  { val: l.input || 'ε', cls: 'font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap' },
+                  { val: <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${l.isValid ? STATUS_CLS.ok : STATUS_CLS.err}`}>{l.isValid ? 'ACCEPTED' : 'REJECTED'}</span> },
+                  { val: l.state, cls: 'text-slate-600 dark:text-slate-300 whitespace-nowrap' }, { val: l.time, cls: 'text-slate-400 dark:text-slate-500 text-[11px] whitespace-nowrap' },
+                  { val: <button type="button" onClick={() => handleSimulate(l.input)} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors whitespace-nowrap"><RotateCcw className="w-3 h-3" /> Replay</button>, cls: 'text-right whitespace-nowrap' }
                 ]
               }))} />
             </section>
@@ -322,13 +330,13 @@ export default function App() {
                   <div><label htmlFor="reg-code" className={LBL_CLS}>Serial Code</label><input id="reg-code" type="text" placeholder="e.g. IT-2026-001" value={regCode} onChange={(e) => { setRegCode(e.target.value.toUpperCase()); setFormMsg(null); }} className={`${INP_CLS} font-mono uppercase`} /></div>
                 </div>
                 {formMsg && (
-                  <div className={`p-3 rounded-lg border font-mono text-xs flex items-center gap-2 ${formMsg.type === 'ok' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400'}`}>
-                    {formMsg.type === 'ok' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
+                  <div className={`p-3 rounded-lg border font-mono text-xs flex items-center gap-2 ${STATUS_CLS[formMsg.type]}`}>
+                    {formMsg.type === 'ok' ? <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" /> : <XCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />}
                     <span>{formMsg.text}</span>
                   </div>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button type="button" onClick={() => { setRegCode(generateSampleCode(category)); setFormMsg(null); }} className={BTN_SEC}>Generate Code</button>
+                  <button type="button" onClick={() => { setRegCode(generateSampleCode(category)); setFormMsg(null); }} className="px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors">Generate Code</button>
                   <button type="submit" className="px-5 py-2 text-xs font-mono font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors">Register Product</button>
                 </div>
               </form>
@@ -347,7 +355,7 @@ export default function App() {
               <Table emptyMsg="No products in catalog. Register an item above." headers={['Category', 'Product Code', { title: 'Product Name', cls: 'font-sans' }, 'Registered Date', { title: 'Actions', cls: 'text-right' }]} rows={displayedProducts.map((p) => ({
                 key: p.code, cells: [
                   { val: <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">{p.category}</span> },
-                  { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100' }, { val: p.name, cls: 'text-slate-700 dark:text-slate-300 font-sans' },
+                  { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap' }, { val: p.name, cls: 'text-slate-700 dark:text-slate-300 font-sans min-w-[140px]' },
                   {
                     val: (
                       <span className="whitespace-nowrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
@@ -357,7 +365,7 @@ export default function App() {
                   },
                   {
                     val: (
-                      <div className="flex items-center justify-end gap-3 font-mono text-xs">
+                      <div className="flex items-center justify-end gap-3 font-mono text-xs whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => handleSimulate(p.code)}
@@ -375,7 +383,7 @@ export default function App() {
                           Delete
                         </button>
                       </div>
-                    ), cls: 'text-right'
+                    ), cls: 'text-right whitespace-nowrap'
                   }
                 ]
               }))} />

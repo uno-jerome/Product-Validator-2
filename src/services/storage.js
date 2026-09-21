@@ -4,9 +4,10 @@ const get = (key) => {
   try { return JSON.parse(localStorage.getItem(key)) || []; }
   catch { return []; }
 };
-const set = (key, val) => localStorage.setItem(key, JSON.stringify(val));
-
-const save = (key, data) => { set(key, data); return data; };
+const save = (key, data) => {
+  localStorage.setItem(key, JSON.stringify(data));
+  return data;
+};
 
 export const getProducts = () => get(KEYS.PRODUCTS);
 export const saveProduct = (product) => {
@@ -19,7 +20,7 @@ export const saveProduct = (product) => {
   save(KEYS.PRODUCTS, updated);
   return { success: true, data: updated };
 };
-export const deleteProduct = (code) => save(KEYS.PRODUCTS, getProducts().filter(p => p.code !== code));
+export const deleteProduct = (code) => save(KEYS.PRODUCTS, getProducts().filter(p => p.code.toUpperCase() !== code.toUpperCase()));
 
 export const getLogs = () => get(KEYS.LOGS);
 export const saveValidationLog = (entry, maxLimit = 100) => {
