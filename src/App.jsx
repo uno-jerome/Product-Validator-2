@@ -229,7 +229,7 @@ export default function App() {
 
               <div className="space-y-3 pt-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">Character Verification Tape</span>
+                  <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">  Input Scanner </span>
                   {activeStep !== null && (
                     <span className="text-[11px] font-mono text-blue-500 dark:text-blue-400 flex items-center gap-1.5 animate-pulse">
                       <span className="w-2 h-2 rounded-full bg-blue-500" /> Inspecting Step {activeStep + 1}

@@ -96,7 +96,7 @@ The transition function $\delta : Q \times \Sigma \to Q$ governs machine executi
 
 * **Pure Client-Side Static Architecture:** Built using React 18, Vite, and Tailwind CSS without runtime backend or daemon dependencies.
 * **Formal Sequential Computation:** Input strings are evaluated sequentially symbol-by-symbol against the transition function $\delta(q_i, \sigma)$. Character checks (`^[A-Z]`, `^[0-9]`, `^-`) are strictly restricted to verifying character class membership for individual symbols at each state, preserving the formal step-by-step computational model without regex validation shortcuts.
-* **Character Verification Tape Visualization:** A continuous, unified 11-cell horizontal read-tape dynamically renders machine transitions:
+* **Input Scanner Visualization:** A continuous, unified 11-cell horizontal read-tape dynamically renders machine transitions:
   * **Contiguous Cells:** 11 monospace character cells that display input symbols or dim placeholder dots (`·`).
   * **Sequential Sweep Animation:** A 45ms step-by-step sweep visually tracks the automaton scanning the tape.
   * **Instant Visual Halting:** Invalid symbols divert the cell to a prominent rose highlight halting at `q_trap` and graying out remaining cells.
@@ -104,7 +104,7 @@ The transition function $\delta : Q \times \Sigma \to Q$ governs machine executi
 * **Interactive Features & Persistence:**
   * **Audit History & Replay:** Logs validation attempts with timestamp, Final state, and verdict, allowing one-click replay.
   * **Product Inventory:** Product registration with automatic sample generation and synchronous `localStorage` persistence.
-  * **Dark / Light Mode:** Built-in theme switcher with client-side preference caching.
+  * **Dark / Light Mode:** Built-in theme switcher with client-ide preference caching.
 
 ---
 
