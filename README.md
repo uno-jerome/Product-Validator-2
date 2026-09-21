@@ -102,8 +102,8 @@ The transition function $\delta : Q \times \Sigma \to Q$ governs machine executi
   * **Instant Visual Halting:** Invalid symbols divert the cell to a prominent rose highlight halting at `q_trap` and graying out remaining cells.
   * **Aligned State & Domain Rows:** Resulting states (`q1` through `q11`) and domain spans (`PREFIX`, `YEAR`, `SERIAL`) align directly under their respective cells.
 * **Interactive Features & Persistence:**
-  * **Audit History & Replay:** Logs validation attempts with timestamp, halting state, and verdict, allowing one-click replay.
-  * **Inventory Catalog:** Product registration with automatic sample generation and synchronous `localStorage` persistence.
+  * **Audit History & Replay:** Logs validation attempts with timestamp, Final state, and verdict, allowing one-click replay.
+  * **Product Inventory:** Product registration with automatic sample generation and synchronous `localStorage` persistence.
   * **Dark / Light Mode:** Built-in theme switcher with client-side preference caching.
 
 ---
@@ -170,7 +170,7 @@ npm run build
 
 The validation engine is verified with automated tests in `src/core/dfaEngine.test.js` (`npm run test`). Below are the primary representative cases:
 
-| Input String (`w`) | Expected Verdict | Halting State | Classification / Case |
+| Input String (`w`) | Result | Final State | Classification / Case |
 | :--- | :---: | :---: | :--- |
 | `IT-2026-001` | **Accepted** | `q11` | Valid format (IT Equipment) |
 | `EL-2025-104` | **Accepted** | `q11` | Valid format (Electronics category) |

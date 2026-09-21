@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Sun, Moon, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 import { validateProductCode, generateSampleCode } from './core/dfaEngine';
-import { getProducts, saveProduct, deleteProduct, getLogs, saveLog, clearLogs, getTheme, setTheme } from './services/storage';
+import { getProducts, saveProduct, deleteProduct, getLogs, saveValidationLog, clearLogs, getTheme, setTheme } from './services/storage';
 
 const PRESETS = [
   { label: 'VALID CODE', val: 'IT-2026-001' },
@@ -25,12 +25,27 @@ const INP_CLS = "w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 da
 const LBL_CLS = "block text-xs font-mono font-medium text-slate-600 dark:text-slate-400 mb-1";
 const CARD_CLS = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6 space-y-4 shadow-sm";
 
+const LimitSelector = ({ id, value, onChange }) => (
+  <div className="flex items-center gap-1.5 font-mono text-xs text-slate-500 dark:text-slate-400">
+    <label htmlFor={id} className="font-medium text-[11px]">Show:</label>
+    <select
+      id={id}
+      value={value}
+      onChange={onChange}
+      aria-label="Show entries limit"
+      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-lg px-2.5 py-1 text-xs font-mono outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors cursor-pointer shadow-sm"
+    >
+      {[25, 50, 75, 100].map((v) => <option key={v} value={v}>{v}</option>)}
+    </select>
+  </div>
+);
+
 const Table = ({ headers, rows, emptyMsg }) => !rows.length ? (
   <div className="py-8 text-center font-mono text-xs text-slate-400 dark:text-slate-500">{emptyMsg}</div>
 ) : (
   <div className="overflow-x-auto">
     <table className="w-full text-left font-mono text-xs border-collapse">
-      <thead><tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">{headers.map((h, i) => <th key={i} className={`py-2.5 px-3 font-medium ${h.cls || ''}`}>{h.title || h}</th>)}</tr></thead>
+      <thead><tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">{headers.map((h, i) => <th key={i} className={`py-2.5 px-3 font-medium whitespace-nowrap ${h.cls || ''}`}>{h.title || h}</th>)}</tr></thead>
       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">{rows.map((r, i) => <tr key={r.key || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">{r.cells.map((c, j) => <td key={j} className={`py-2.5 px-3 ${c.cls || ''}`}>{c.val}</td>)}</tr>)}</tbody>
     </table>
   </div>
@@ -42,8 +57,11 @@ export default function App() {
   const [input, setInput] = useState('IT-2026-001');
   const [products, setProducts] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [logLimit, setLogLimit] = useState(25);
+  const [catalogLimit, setCatalogLimit] = useState(25);
   const [category, setCategory] = useState('IT');
   const [productName, setProductName] = useState('');
+  const [regCode, setRegCode] = useState('');
   const [activeStep, setActiveStep] = useState(null);
   const [formMsg, setFormMsg] = useState(null);
   const timerRef = useRef(null);
@@ -110,10 +128,16 @@ export default function App() {
     }, 45);
   };
 
-  const recordLog = (code, res) => setLogs(saveLog({
-    id: Date.now() + Math.random(), input: code, isValid: res.isValid, state: res.finalState,
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  }));
+  const displayedLogs = useMemo(() => logs.slice(0, logLimit), [logs, logLimit]);
+  const displayedProducts = useMemo(() => products.slice(0, catalogLimit), [products, catalogLimit]);
+
+  const recordLog = (code, res) => {
+    if (logs.some(entry => entry.input === code)) return;
+    setLogs(saveValidationLog({
+      id: Date.now() + Math.random(), input: code, isValid: res.isValid, state: res.finalState,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    }));
+  };
 
   const handleSimulate = (code) => {
     setActiveTab('simulator');
@@ -130,13 +154,20 @@ export default function App() {
   const handleRegisterProduct = (e) => {
     e.preventDefault(); setFormMsg(null);
     if (!productName.trim()) return setFormMsg({ type: 'err', text: 'Product name is required.' });
-    const code = input.trim().toUpperCase(), res = validateProductCode(code);
+    if (!regCode.trim()) return setFormMsg({ type: 'err', text: 'Serial code is required.' });
+    const code = regCode.trim().toUpperCase(), res = validateProductCode(code);
     if (!res.isValid) return setFormMsg({ type: 'err', text: `Invalid serial code: ${res.errorReason || 'DFA rejected'}` });
     const now = new Date();
     const registeredDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     const registeredTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setProducts(saveProduct({ code, category, name: productName.trim(), registeredDate, registeredTime }));
-    setProductName(''); setFormMsg({ type: 'ok', text: `Registered "${code}" successfully!` }); setInput(generateSampleCode(category));
+    const saveResult = saveProduct({ code, category, name: productName.trim(), registeredDate, registeredTime });
+    if (!saveResult.success) {
+      return setFormMsg({ type: 'err', text: `Serial code "${code}" already exists in the inventory.` });
+    }
+    setProducts(saveResult.data);
+    setProductName('');
+    setRegCode('');
+    setFormMsg({ type: 'ok', text: `Registered "${code}" successfully!` });
   };
 
   return (
@@ -145,7 +176,7 @@ export default function App() {
         <header className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Product Code Validator</h1>
-            <p className="text-xs sm:text-sm font-mono text-slate-500 dark:text-slate-400 mt-0.5">M = (Q, Σ, δ, q0, F) • 13 States • |Σ| = 37</p>
+            <p className="text-[11px] sm:text-sm font-mono text-slate-500 dark:text-slate-400 mt-0.5 truncate sm:overflow-visible">M = (Q, Σ, δ, q0, F) • 13 States • |Σ| = 37</p>
           </div>
           <button onClick={() => setThemeState((p) => p === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme" className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-colors shrink-0">
             {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-600" />}
@@ -154,7 +185,7 @@ export default function App() {
         </header>
 
         <nav role="tablist" aria-label="Main navigation tabs" className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
-          {[{ id: 'simulator', label: 'DFA Simulator' }, { id: 'catalog', label: `Inventory Catalog (${products.length})` }].map((tab) => (
+          {[{ id: 'simulator', label: 'DFA Simulator' }, { id: 'catalog', label: `Inventory (${products.length})` }].map((tab) => (
             <button key={tab.id} role="tab" id={`tab-${tab.id}`} aria-selected={activeTab === tab.id} aria-controls={`panel-${tab.id}`} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 transition-all ${activeTab === tab.id ? 'border-emerald-600 dark:border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'}`}>{tab.label}</button>
           ))}
         </nav>
@@ -215,11 +246,11 @@ export default function App() {
                     </div>
 
                     {/* State Row: q1 through q11 */}
-                    <div className="flex w-full mt-2 px-0.5 text-slate-400">
+                    <div className="grid grid-cols-11 w-full mt-2 px-0.5 text-slate-400">
                       {tapeCells.map((c, i) => (
                         <div
                           key={i}
-                          className={`flex-1 min-w-0 text-center font-mono text-[9px] sm:text-xs md:text-sm truncate transition-colors ${c.stateCls}`}
+                          className={`text-center font-mono text-[9px] sm:text-xs md:text-sm truncate transition-colors ${c.stateCls}`}
                         >
                           {c.state}
                         </div>
@@ -227,16 +258,16 @@ export default function App() {
                     </div>
 
                     {/* Domain Row: Prefix (2 cells), -, Year (4 cells), -, Serial (3 cells) */}
-                    <div className="flex w-full items-center mt-2 px-0.5 gap-1">
-                      <div className="flex-[2] py-1 text-center rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] sm:text-xs font-semibold tracking-wider">
+                    <div className="grid grid-cols-11 w-full items-center mt-2 px-0.5 gap-0.5 text-center">
+                      <div className="col-span-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
                         PREFIX
                       </div>
-                      <div className="flex-[1] text-center text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
-                      <div className="flex-[4] py-1 text-center rounded border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] sm:text-xs font-semibold tracking-wider">
+                      <div className="col-span-1 text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
+                      <div className="col-span-4 py-1 rounded border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
                         YEAR
                       </div>
-                      <div className="flex-[1] text-center text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
-                      <div className="flex-[3] py-1 text-center rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] sm:text-xs font-semibold tracking-wider">
+                      <div className="col-span-1 text-slate-400 dark:text-slate-600 text-xs font-mono font-bold">—</div>
+                      <div className="col-span-3 py-1 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] sm:text-xs font-semibold tracking-wider truncate">
                         SERIAL
                       </div>
                     </div>
@@ -246,11 +277,27 @@ export default function App() {
             </section>
 
             <section className={CARD_CLS}>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-2"><h2 className="text-sm font-semibold font-mono text-slate-900 dark:text-slate-100">Validation Audit History</h2><span className="text-xs font-mono text-slate-400 dark:text-slate-500 ml-1">({logs.length} entries)</span></div>
-                {logs.length > 0 && <button type="button" onClick={() => setLogs(clearLogs())} className="text-xs font-mono font-medium text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">Clear Logs</button>}
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold font-mono text-slate-900 dark:text-slate-100">Validation History</h2>
+                  <span className="text-xs font-mono text-slate-400 dark:text-slate-500 ml-1">
+                    ({displayedLogs.length} of {logs.length} entries)
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <LimitSelector id="log-limit" value={logLimit} onChange={(e) => setLogLimit(Number(e.target.value))} />
+                  {logs.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setLogs(clearLogs())}
+                      className="text-xs font-mono font-medium text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                    >
+                      Clear Logs
+                    </button>
+                  )}
+                </div>
               </div>
-              <Table emptyMsg="No validation logs recorded. Validate an input or click a preset above." headers={['Input String', 'Verdict Badge', 'Halting State', 'Timestamp', { title: 'Actions', cls: 'text-right' }]} rows={logs.map((l) => ({
+              <Table emptyMsg="No validation logs recorded. Validate an input or click a preset above." headers={['Input String', 'Result', 'Final State', 'Timestamp', { title: 'Actions', cls: 'text-right' }]} rows={displayedLogs.map((l) => ({
                 key: l.id, cells: [
                   { val: l.input || 'ε', cls: 'font-bold text-slate-900 dark:text-slate-100' },
                   { val: <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${l.isValid ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'}`}>{l.isValid ? 'ACCEPTED' : 'REJECTED'}</span> },
@@ -270,9 +317,9 @@ export default function App() {
               </div>
               <form onSubmit={handleRegisterProduct} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label htmlFor="reg-category" className={LBL_CLS}>Department Category</label><select id="reg-category" value={category} onChange={(e) => { const c = e.target.value; setCategory(c); setInput(generateSampleCode(c)); setFormMsg(null); }} className={`${INP_CLS} font-mono`}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.id} — {c.name}</option>)}</select></div>
+                  <div><label htmlFor="reg-category" className={LBL_CLS}>Department Category</label><select id="reg-category" value={category} onChange={(e) => { setCategory(e.target.value); setFormMsg(null); }} className={`${INP_CLS} font-mono`}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.id} — {c.name}</option>)}</select></div>
                   <div><label htmlFor="reg-name" className={LBL_CLS}>Product Name</label><input id="reg-name" type="text" placeholder="e.g. Dell Latitude 7420" value={productName} onChange={(e) => { setProductName(e.target.value); setFormMsg(null); }} className={INP_CLS} /></div>
-                  <div><label htmlFor="reg-code" className={LBL_CLS}>Serial Code</label><input id="reg-code" type="text" placeholder="e.g. IT-2026-001" value={input} onChange={(e) => { setInput(e.target.value.toUpperCase()); setFormMsg(null); }} className={`${INP_CLS} font-mono uppercase`} /></div>
+                  <div><label htmlFor="reg-code" className={LBL_CLS}>Serial Code</label><input id="reg-code" type="text" placeholder="e.g. IT-2026-001" value={regCode} onChange={(e) => { setRegCode(e.target.value.toUpperCase()); setFormMsg(null); }} className={`${INP_CLS} font-mono uppercase`} /></div>
                 </div>
                 {formMsg && (
                   <div className={`p-3 rounded-lg border font-mono text-xs flex items-center gap-2 ${formMsg.type === 'ok' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400'}`}>
@@ -281,17 +328,23 @@ export default function App() {
                   </div>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button type="button" onClick={() => { setInput(generateSampleCode(category)); setFormMsg(null); }} className={BTN_SEC}>Generate Code</button>
+                  <button type="button" onClick={() => { setRegCode(generateSampleCode(category)); setFormMsg(null); }} className={BTN_SEC}>Generate Code</button>
                   <button type="submit" className="px-5 py-2 text-xs font-mono font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors">Register Product</button>
                 </div>
               </form>
             </section>
 
             <section className={CARD_CLS}>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                <h2 className="text-sm font-semibold font-mono text-slate-900 dark:text-slate-100">Product Inventory Catalog <span className="text-xs font-normal text-slate-400 dark:text-slate-500 ml-1">({products.length} registered)</span></h2>
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold font-mono text-slate-900 dark:text-slate-100">Product Inventory</h2>
+                  <span className="text-xs font-mono text-slate-400 dark:text-slate-500 ml-1">
+                    ({displayedProducts.length} of {products.length} registered)
+                  </span>
+                </div>
+                <LimitSelector id="catalog-limit" value={catalogLimit} onChange={(e) => setCatalogLimit(Number(e.target.value))} />
               </div>
-              <Table emptyMsg="No products in catalog. Register an item above." headers={['Category', 'Product Code', { title: 'Product Name', cls: 'font-sans' }, 'Registered Date', { title: 'Actions', cls: 'text-right' }]} rows={products.map((p) => ({
+              <Table emptyMsg="No products in catalog. Register an item above." headers={['Category', 'Product Code', { title: 'Product Name', cls: 'font-sans' }, 'Registered Date', { title: 'Actions', cls: 'text-right' }]} rows={displayedProducts.map((p) => ({
                 key: p.code, cells: [
                   { val: <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">{p.category}</span> },
                   { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100' }, { val: p.name, cls: 'text-slate-700 dark:text-slate-300 font-sans' },
