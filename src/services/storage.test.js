@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
+  STORAGE_KEYS,
   getProducts,
   saveProduct,
   deleteProduct,
@@ -7,7 +8,8 @@ import {
   saveValidationLog,
   clearLogs,
   getTheme,
-  setTheme
+  setTheme,
+  DEFAULT_PRODUCTS
 } from './storage';
 
 const mockStorage = (() => {
@@ -33,25 +35,42 @@ describe('Storage Service (Synchronous LocalStorage Manager)', () => {
   it('manages products correctly (save, get, delete by code) and rejects duplicates', () => {
     expect(getProducts()).toEqual([]);
 
-    const p1 = { code: 'IT-2026-001', category: 'IT', name: 'Workstation 1' };
+    const p1 = { id: 'p1', code: 'IT-2026-001', name: 'Workstation 1', addedAt: '2026-09-26' };
     const res1 = saveProduct(p1);
     expect(res1.success).toBe(true);
     expect(getProducts()).toEqual([p1]);
 
     // Reject duplicate code (case-insensitive) without altering catalog
-    const dupRes = saveProduct({ code: 'it-2026-001', category: 'IT', name: 'Workstation Duplicate' });
+    const dupRes = saveProduct({ id: 'dup', code: 'it-2026-001', name: 'Workstation Duplicate', addedAt: '2026-09-26' });
     expect(dupRes.success).toBe(false);
     expect(dupRes.error).toBe('DUPLICATE_CODE');
     expect(getProducts()).toHaveLength(1);
     expect(getProducts()[0].name).toBe('Workstation 1');
 
-    const p2 = { code: 'NW-2026-118', category: 'NW', name: 'Router' };
+    const p2 = { id: 'p2', code: 'NW-2026-118', name: 'Router', addedAt: '2026-09-26' };
     const res2 = saveProduct(p2);
     expect(res2.success).toBe(true);
     expect(getProducts()).toHaveLength(2);
 
     deleteProduct('IT-2026-001');
     expect(getProducts()).toEqual([p2]);
+  });
+
+  it('exports DEFAULT_PRODUCTS with only id, code, name, addedAt (no category)', () => {
+    expect(DEFAULT_PRODUCTS).toBeDefined();
+    expect(Array.isArray(DEFAULT_PRODUCTS)).toBe(true);
+    expect(DEFAULT_PRODUCTS.length).toBeGreaterThan(0);
+    DEFAULT_PRODUCTS.forEach(p => {
+      expect(p).toHaveProperty('id');
+      expect(p).toHaveProperty('code');
+      expect(p).toHaveProperty('name');
+      expect(p).toHaveProperty('addedAt');
+      expect(p.category).toBeUndefined();
+    });
+  });
+
+  it('uses dfa_product_catalog_v2 cache storage key', () => {
+    expect(STORAGE_KEYS.CATALOG).toBe('dfa_product_catalog_v2');
   });
 
   it('manages validation logs, blocks duplicates, and truncates to limit', () => {

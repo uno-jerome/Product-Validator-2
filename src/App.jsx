@@ -11,15 +11,6 @@ const PRESETS = [
   { label: 'ALPHABET ERROR', val: 'IT#2026-001' }
 ];
 
-const CATEGORIES = [
-  { id: 'IT', name: 'Information Technology' },
-  { id: 'EL', name: 'Electronics & Appliances' },
-  { id: 'PR', name: 'Printing & Publishing' },
-  { id: 'NW', name: 'Networking Equipment' },
-  { id: 'OF', name: 'Office Furniture & Supplies' }
-];
-
-
 const STATUS_CLS = {
   ok: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400',
   err: 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'
@@ -27,6 +18,19 @@ const STATUS_CLS = {
 const INP_CLS = "w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:border-slate-500 text-slate-900 dark:text-slate-100";
 const LBL_CLS = "block text-xs font-mono font-medium text-slate-600 dark:text-slate-400 mb-1";
 const CARD_CLS = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6 space-y-4 shadow-sm";
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+};
 
 const LimitSelector = ({ id, value, onChange }) => (
   <div className="flex items-center gap-1.5 font-mono text-xs text-slate-500 dark:text-slate-400">
@@ -43,13 +47,37 @@ const LimitSelector = ({ id, value, onChange }) => (
   </div>
 );
 
-const Table = ({ headers, rows, emptyMsg }) => !rows.length ? (
-  <div className="py-8 text-center font-mono text-xs text-slate-400 dark:text-slate-500">{emptyMsg}</div>
-) : (
+const Table = ({ headers, rows, emptyMsg }) => (
   <div className="overflow-x-auto">
     <table className="w-full text-left font-mono text-xs border-collapse">
-      <thead><tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">{headers.map((h, i) => <th key={i} className={`py-2.5 px-3 font-medium whitespace-nowrap ${h.cls || ''}`}>{h.title || h}</th>)}</tr></thead>
-      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">{rows.map((r, i) => <tr key={r.key || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">{r.cells.map((c, j) => <td key={j} className={`py-2.5 px-3 ${c.cls || ''}`}>{c.val}</td>)}</tr>)}</tbody>
+      <thead>
+        <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+          {headers.map((h, i) => (
+            <th key={i} className={`py-2.5 px-3 font-medium whitespace-nowrap ${h.cls || ''}`}>
+              {h.title || h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+        {!rows.length ? (
+          <tr>
+            <td colSpan={headers.length} className="py-8 text-center font-mono text-xs text-slate-400 dark:text-slate-500">
+              {emptyMsg}
+            </td>
+          </tr>
+        ) : (
+          rows.map((r, i) => (
+            <tr key={r.key || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+              {r.cells.map((c, j) => (
+                <td key={j} className={`py-2.5 px-3 ${c.cls || ''}`}>
+                  {c.val}
+                </td>
+              ))}
+            </tr>
+          ))
+        )}
+      </tbody>
     </table>
   </div>
 );
@@ -62,7 +90,7 @@ export default function App() {
   const [logs, setLogs] = useState([]);
   const [logLimit, setLogLimit] = useState(25);
   const [catalogLimit, setCatalogLimit] = useState(25);
-  const [category, setCategory] = useState('IT');
+  const [searchQuery, setSearchQuery] = useState('');
   const [productName, setProductName] = useState('');
   const [regCode, setRegCode] = useState('');
   const [activeStep, setActiveStep] = useState(null);
@@ -136,7 +164,17 @@ export default function App() {
   };
 
   const displayedLogs = useMemo(() => logs.slice(0, logLimit), [logs, logLimit]);
-  const displayedProducts = useMemo(() => products.slice(0, catalogLimit), [products, catalogLimit]);
+
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(p =>
+      (p?.name && p.name.toLowerCase().includes(q)) ||
+      (p?.code && p.code.toLowerCase().includes(q))
+    );
+  }, [products, searchQuery]);
+
+  const displayedProducts = useMemo(() => filteredProducts.slice(0, catalogLimit), [filteredProducts, catalogLimit]);
 
   const recordLog = (code, res) => {
     setLogs(saveValidationLog({
@@ -160,13 +198,10 @@ export default function App() {
   const handleRegisterProduct = (e) => {
     e.preventDefault(); setFormMsg(null);
     if (!productName.trim()) return setFormMsg({ type: 'err', text: 'Product name is required.' });
-    if (!regCode.trim()) return setFormMsg({ type: 'err', text: 'Product Code is required.' });
+    if (!regCode.trim()) return setFormMsg({ type: 'err', text: 'Serial Code is required.' });
     const code = regCode.trim().toUpperCase(), res = validateProductCode(code);
-    if (!res.isValid) return setFormMsg({ type: 'err', text: `Invalid Product Code: ${res.errorReason || 'DFA rejected'}` });
-    const now = new Date();
-    const registeredDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    const registeredTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const saveResult = saveProduct({ code, category, name: productName.trim(), registeredDate, registeredTime });
+    if (!res.isAccepted) return setFormMsg({ type: 'err', text: `Invalid Product Code: ${res.errorReason || 'DFA rejected'}` });
+    const saveResult = saveProduct({ code, name: productName.trim() });
     if (!saveResult.success) {
       return setFormMsg({ type: 'err', text: `Product Code "${code}" already exists in the inventory.` });
     }
@@ -181,7 +216,7 @@ export default function App() {
       <div className="max-w-6xl mx-auto space-y-5 sm:space-y-6">
         <header className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Product Code Validator</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:white">Product Code Validator</h1>
             <p className="text-[11px] sm:text-sm font-mono text-slate-500 dark:text-slate-400 mt-0.5">M = (Q, Σ, δ, q0, F) • 13 States • |Σ| = 37</p>
           </div>
           <button onClick={() => setThemeState((p) => p === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme" className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-colors shrink-0">
@@ -321,13 +356,33 @@ export default function App() {
           <div id="panel-catalog" role="tabpanel" aria-labelledby="tab-catalog" className="space-y-6">
             <section className={CARD_CLS}>
               <div className="pb-2 border-b border-slate-100 dark:border-slate-800">
-                <h2 className="text-sm font-semibold font-mono text-slate-900 dark:text-slate-100">Product Registration</h2><p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Verify serial numbers and add new items to your inventory.</p>
+                <h2 className="text-sm font-semibold font-mono text-slate-900 dark:text-slate-100">Product Registration</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Verify serial numbers and add new items to your inventory.</p>
               </div>
               <form onSubmit={handleRegisterProduct} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label htmlFor="reg-category" className={LBL_CLS}>Department Category</label><select id="reg-category" value={category} onChange={(e) => { setCategory(e.target.value); setFormMsg(null); }} className={`${INP_CLS} font-mono`}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.id} — {c.name}</option>)}</select></div>
-                  <div><label htmlFor="reg-name" className={LBL_CLS}>Product Name</label><input id="reg-name" type="text" placeholder="e.g. Dell Latitude 7420" value={productName} onChange={(e) => { setProductName(e.target.value); setFormMsg(null); }} className={INP_CLS} /></div>
-                  <div><label htmlFor="reg-code" className={LBL_CLS}>Product Code</label><input id="reg-code" type="text" placeholder="e.g. IT-2026-001" value={regCode} onChange={(e) => { setRegCode(e.target.value.toUpperCase()); setFormMsg(null); }} className={`${INP_CLS} font-mono uppercase`} /></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="reg-name" className={LBL_CLS}>Product Name</label>
+                    <input
+                      id="reg-name"
+                      type="text"
+                      placeholder="e.g. Dell Latitude 7420"
+                      value={productName}
+                      onChange={(e) => { setProductName(e.target.value); setFormMsg(null); }}
+                      className={INP_CLS}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="reg-code" className={LBL_CLS}>Serial Code</label>
+                    <input
+                      id="reg-code"
+                      type="text"
+                      placeholder="e.g. IT-2026-004"
+                      value={regCode}
+                      onChange={(e) => { setRegCode(e.target.value.toUpperCase()); setFormMsg(null); }}
+                      className={`${INP_CLS} font-mono uppercase`}
+                    />
+                  </div>
                 </div>
                 {formMsg && (
                   <div className={`p-3 rounded-lg border font-mono text-xs flex items-center gap-2 ${STATUS_CLS[formMsg.type]}`}>
@@ -336,7 +391,7 @@ export default function App() {
                   </div>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button type="button" onClick={() => { setRegCode(generateSampleCode(category)); setFormMsg(null); }} className="px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors">Generate Code</button>
+                  <button type="button" onClick={() => { setRegCode(generateSampleCode()); setFormMsg(null); }} className="px-3 py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors">Generate Code</button>
                   <button type="submit" className="px-5 py-2 text-xs font-mono font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors">Register Product</button>
                 </div>
               </form>
@@ -350,43 +405,61 @@ export default function App() {
                     ({displayedProducts.length} of {products.length} registered)
                   </span>
                 </div>
-                <LimitSelector id="catalog-limit" value={catalogLimit} onChange={(e) => setCatalogLimit(Number(e.target.value))} />
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <input
+                    type="text"
+                    placeholder="Search by name or code..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Search catalog by name or code"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-lg px-2.5 py-1 text-xs font-mono outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors shadow-sm w-44 sm:w-56"
+                  />
+                  <LimitSelector id="catalog-limit" value={catalogLimit} onChange={(e) => setCatalogLimit(Number(e.target.value))} />
+                </div>
               </div>
-              <Table emptyMsg="No products in catalog. Register an item above." headers={['Category', 'Product Code', { title: 'Product Name', cls: 'font-sans' }, 'Registered Date', { title: 'Actions', cls: 'text-right' }]} rows={displayedProducts.map((p) => ({
-                key: p.code, cells: [
-                  { val: <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">{p.category}</span> },
-                  { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap' }, { val: p.name, cls: 'text-slate-700 dark:text-slate-300 font-sans min-w-[140px]' },
-                  {
-                    val: (
-                      <span className="whitespace-nowrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                        {p.registeredDate || 'N/A'}{p.registeredTime ? ` ${p.registeredTime}` : ''}
-                      </span>
-                    ), cls: 'text-slate-400 dark:text-slate-500'
-                  },
-                  {
-                    val: (
-                      <div className="flex items-center justify-end gap-3 font-mono text-xs whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => handleSimulate(p.code)}
-                          aria-label={`Scan ${p.code}`}
-                          className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors"
-                        >
-                          Scan
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setProducts(deleteProduct(p.code))}
-                          aria-label={`Delete ${p.code}`}
-                          className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    ), cls: 'text-right whitespace-nowrap'
-                  }
-                ]
-              }))} />
+              <Table
+                emptyMsg="No products in catalog. Register an item above."
+                headers={['#', { title: 'Product Name', cls: 'font-sans' }, 'Serial Code', 'Date Added', { title: 'Actions', cls: 'text-right' }]}
+                rows={displayedProducts.map((p, i) => ({
+                  key: p.id || p.code,
+                  cells: [
+                    { val: i + 1, cls: 'text-slate-400 dark:text-slate-500 font-mono text-[11px] w-8' },
+                    { val: p.name, cls: 'text-slate-800 dark:text-slate-200 font-sans font-medium min-w-[140px]' },
+                    { val: p.code, cls: 'font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap font-mono' },
+                    {
+                      val: (
+                        <span className="whitespace-nowrap text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                          {formatDate(p.addedAt || p.registeredDate)}
+                        </span>
+                      ),
+                      cls: 'text-slate-400 dark:text-slate-500'
+                    },
+                    {
+                      val: (
+                        <div className="flex items-center justify-end gap-3 font-mono text-xs whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => handleSimulate(p.code)}
+                            aria-label={`Scan ${p.code}`}
+                            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors"
+                          >
+                            Scan
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setProducts(deleteProduct(p.code))}
+                            aria-label={`Delete ${p.code}`}
+                            className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ),
+                      cls: 'text-right whitespace-nowrap'
+                    }
+                  ]
+                }))}
+              />
             </section>
           </div>
         )}

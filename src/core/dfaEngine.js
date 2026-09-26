@@ -17,7 +17,7 @@ const STAGES = [
 
 // δ(qi, c) -> q_{i+1} if valid, else q_trap
 export function validateProductCode(input) {
-  if (!input) return { input, isValid: false, finalState: 'q0', trace: [], errorReason: 'Empty string ε' };
+  if (!input) return { input, isValid: false, isAccepted: false, finalState: 'q0', trace: [], errorReason: 'Empty string ε' };
   let currentState = 'q0', errorReason = null, trace = [];
 
   for (let i = 0; i < input.length; i++) {
@@ -42,10 +42,17 @@ export function validateProductCode(input) {
   }
 
   if (currentState !== 'q11' && !errorReason) errorReason = `Halted prematurely at state ${currentState}`;
-  return { input, isValid: currentState === 'q11' && trace.length === 11, finalState: currentState, trace, errorReason };
+  const isAccepted = currentState === 'q11' && trace.length === 11;
+  return { input, isValid: isAccepted, isAccepted, finalState: currentState, trace, errorReason };
 }
 
-export function generateSampleCode(category = 'IT') {
-  const serial = String(Math.floor(Math.random() * 900) + 100).padStart(3, '0');
-  return `${category}-2026-${serial}`;
+export const SAMPLE_PREFIXES = ['IT', 'EL', 'NW', 'PR', 'OF', 'HR', 'QA', 'RD'];
+
+export function generateSampleCode(prefixOverride) {
+  const prefix = prefixOverride && /^[A-Z]{2}$/i.test(prefixOverride.trim())
+    ? prefixOverride.trim().toUpperCase()
+    : SAMPLE_PREFIXES[Math.floor(Math.random() * SAMPLE_PREFIXES.length)];
+  const year = Math.floor(Math.random() * 3) + 2024;
+  const serial = String(Math.floor(Math.random() * 999) + 1).padStart(3, '0');
+  return `${prefix}-${year}-${serial}`;
 }

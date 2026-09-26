@@ -13,7 +13,6 @@ $$L = \{ c_1 c_2 - y_1 y_2 y_3 y_4 - s_1 s_2 s_3 \mid c_i \in [A\text{-}Z], \, y
   * [States (Q)](#states)
   * [Language & Regular Expression Equivalence](#language--regular-expression-equivalence)
 * [DFA State Transition Table](#dfa-state-transition-table)
-  * [Domain Prefix Mapping](#domain-prefix-mapping)
 * [Architecture & Design Decisions](#architecture--design-decisions)
 * [Project Directory Layout](#project-directory-layout)
 * [Local Setup & Testing Instructions](#local-setup--testing-instructions)
@@ -62,7 +61,7 @@ $$Q = \{ q_0, q_1, q_2, q_3, q_4, q_5, q_6, q_7, q_8, q_9, q_{10}, q_{11}, q_{\t
 
 ## DFA State Transition Table
 
-The transition function $\delta : Q \times \Sigma \to Q$ governs machine execution across three domains: Category Prefix, Production Year, and Serial Sequence. Any symbol that deviates from the domain transition condition diverts execution to `q_trap`.
+The transition function $\delta : Q \times \Sigma \to Q$ governs machine execution across three domains: Prefix ($[A-Z]^2$, recognizing all 676 uppercase permutations from `AA` to `ZZ`), Production Year (`[0-9]{4}`), and Serial Sequence (`[0-9]{3}`). Any symbol that deviates from the domain transition condition diverts execution to `q_trap`.
 
 | Current State | Domain | Valid Symbol (σ) | Next State | Failure Condition | Failure State |
 | :---: | :--- | :---: | :---: | :--- | :---: |
@@ -80,17 +79,8 @@ The transition function $\delta : Q \times \Sigma \to Q$ governs machine executi
 | `q11` | Accepting / Halt | None (Complete) | — | Any character (Length overflow) | `q_trap` |
 | `q_trap` | Dead / Sink State | None | — | Any input symbol | `q_trap` |
 
-### Domain Prefix Mapping
-
-| Prefix | Domain Category | Description |
-| :---: | :--- | :--- |
-| `IT` | IT Equipment | Enterprise workstations, rack servers, laptops |
-| `EL` | Electronics | Power supplies, circuit boards, microcontrollers |
-| `PR` | Peripherals | Displays, human interface devices, mechanical inputs |
-| `NW` | Networking | Switches, routers, transceivers |
-| `OF` | Office Hardware | Infrastructure assets, ergonomic workstations |
-
 ---
+
 
 ## Architecture & Design Decisions
 
@@ -172,8 +162,8 @@ The validation engine is verified with automated tests in `src/core/dfaEngine.te
 
 | Input String (`w`) | Result | Final State | Classification / Case |
 | :--- | :---: | :---: | :--- |
-| `IT-2026-001` | **Accepted** | `q11` | Valid format (IT Equipment) |
-| `EL-2025-104` | **Accepted** | `q11` | Valid format (Electronics category) |
+| `IT-2026-001` | **Accepted** | `q11` | Valid format (Standard prefix) |
+| `EL-2025-104` | **Accepted** | `q11` | Valid format (Standard prefix) |
 | `it-2026-001` | **Rejected** | `q_trap` | Alphabet breach (lowercase `i` ∉ Σ) |
 | `IT-202-001` | **Rejected** | `q_trap` | Year error (expected 4 digits, got 3) |
 | `IT2026-001` | **Rejected** | `q_trap` | Delimiter error (missing hyphen `-`) |
