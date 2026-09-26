@@ -160,15 +160,15 @@ export default function App() {
   const handleRegisterProduct = (e) => {
     e.preventDefault(); setFormMsg(null);
     if (!productName.trim()) return setFormMsg({ type: 'err', text: 'Product name is required.' });
-    if (!regCode.trim()) return setFormMsg({ type: 'err', text: 'Serial code is required.' });
+    if (!regCode.trim()) return setFormMsg({ type: 'err', text: 'Product Code is required.' });
     const code = regCode.trim().toUpperCase(), res = validateProductCode(code);
-    if (!res.isValid) return setFormMsg({ type: 'err', text: `Invalid serial code: ${res.errorReason || 'DFA rejected'}` });
+    if (!res.isValid) return setFormMsg({ type: 'err', text: `Invalid Product Code: ${res.errorReason || 'DFA rejected'}` });
     const now = new Date();
     const registeredDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     const registeredTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const saveResult = saveProduct({ code, category, name: productName.trim(), registeredDate, registeredTime });
     if (!saveResult.success) {
-      return setFormMsg({ type: 'err', text: `Serial code "${code}" already exists in the inventory.` });
+      return setFormMsg({ type: 'err', text: `Product Code "${code}" already exists in the inventory.` });
     }
     setProducts(saveResult.data);
     setProductName('');
@@ -200,7 +200,7 @@ export default function App() {
           <div id="panel-simulator" role="tabpanel" aria-labelledby="tab-simulator" className="space-y-5 sm:space-y-6">
             <section className={`${CARD_CLS} space-y-4 sm:space-y-5`}>
               <div className="space-y-2">
-                <label htmlFor="serial-input" className={LBL_CLS}>Serial Code Input</label>
+                <label htmlFor="serial-input" className={LBL_CLS}>Product Code Input</label>
                 <div className="flex flex-col sm:flex-row gap-2.5">
                   <input id="serial-input" type="text" value={input} onChange={(e) => { resetAnimation(); setInput(e.target.value.toUpperCase()); }} placeholder="e.g. IT-2026-001" className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-slate-500 rounded-lg px-4 py-2.5 font-mono text-base sm:text-lg text-slate-900 dark:text-slate-100 uppercase tracking-widest outline-none transition-colors" />
                   <div className="flex gap-2 sm:w-auto">
@@ -222,7 +222,7 @@ export default function App() {
               <div className={`p-3.5 sm:p-4 rounded-xl border font-mono text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-colors ${dfa.isValid ? STATUS_CLS.ok : STATUS_CLS.err}`}>
                 <div className="flex items-center gap-2.5">
                   {dfa.isValid ? <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" /> : <XCircle className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />}
-                  <span className="font-semibold text-xs sm:text-sm">{dfa.isValid ? 'ACCEPTED (State: q11) — Valid Serial Code' : `REJECTED (State: ${dfa.finalState}) — ${dfa.errorReason || 'Input rejected'}`}</span>
+                  <span className="font-semibold text-xs sm:text-sm">{dfa.isValid ? 'ACCEPTED (State: q11) — Valid Product Code' : `REJECTED (State: ${dfa.finalState}) — ${dfa.errorReason || 'Input rejected'}`}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs opacity-80 self-end sm:self-auto font-semibold"><span>Progress:</span><span className="px-2 py-0.5 rounded bg-white/50 dark:bg-slate-900/50 border border-current">{input.length}/11</span></div>
               </div>
@@ -327,7 +327,7 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div><label htmlFor="reg-category" className={LBL_CLS}>Department Category</label><select id="reg-category" value={category} onChange={(e) => { setCategory(e.target.value); setFormMsg(null); }} className={`${INP_CLS} font-mono`}>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.id} — {c.name}</option>)}</select></div>
                   <div><label htmlFor="reg-name" className={LBL_CLS}>Product Name</label><input id="reg-name" type="text" placeholder="e.g. Dell Latitude 7420" value={productName} onChange={(e) => { setProductName(e.target.value); setFormMsg(null); }} className={INP_CLS} /></div>
-                  <div><label htmlFor="reg-code" className={LBL_CLS}>Serial Code</label><input id="reg-code" type="text" placeholder="e.g. IT-2026-001" value={regCode} onChange={(e) => { setRegCode(e.target.value.toUpperCase()); setFormMsg(null); }} className={`${INP_CLS} font-mono uppercase`} /></div>
+                  <div><label htmlFor="reg-code" className={LBL_CLS}>Product Code</label><input id="reg-code" type="text" placeholder="e.g. IT-2026-001" value={regCode} onChange={(e) => { setRegCode(e.target.value.toUpperCase()); setFormMsg(null); }} className={`${INP_CLS} font-mono uppercase`} /></div>
                 </div>
                 {formMsg && (
                   <div className={`p-3 rounded-lg border font-mono text-xs flex items-center gap-2 ${STATUS_CLS[formMsg.type]}`}>
