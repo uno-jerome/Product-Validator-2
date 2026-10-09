@@ -283,8 +283,8 @@ export default function App() {
               aria-controls={`panel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 transition-all cursor-pointer ${activeTab === tab.id
-                  ? 'border-emerald-600 dark:border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 shadow-sm'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                ? 'border-emerald-600 dark:border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 shadow-sm'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                 }`}
             >
               {tab.label}
@@ -612,8 +612,8 @@ export default function App() {
                     type="submit"
                     disabled={!isRegisterButtonActive}
                     className={`px-5 py-2 text-xs font-mono font-semibold rounded-lg shadow-sm transition-all ${isRegisterButtonActive
-                        ? 'bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white cursor-pointer'
-                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white cursor-pointer'
+                      : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                       }`}
                   >
                     Register Product
@@ -709,7 +709,7 @@ export default function App() {
               CCAUTOMA — Academic Demonstration Prototype
             </span>
             <span className="hidden sm:inline text-slate-300 dark:text-slate-700">|</span>
-            <span>Formal Languages & Automata Theory</span>
+            <span>Automata Theory & Formal Languages </span>
           </div>
           <div className="text-[11px] text-slate-400 dark:text-slate-500 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
             <span>For requirement specification and educational evaluation only. Not a production system.</span>

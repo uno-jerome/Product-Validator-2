@@ -40,7 +40,7 @@ export default function DisclaimerModal({ isOpen, onAcknowledge }) {
             This application is an <span className="font-semibold text-slate-900 dark:text-white">academic prototype</span> developed strictly for requirement specification and academic validation of Deterministic Finite Automata (DFA).
           </p>
           <p>
-            It demonstrates formal language recognition for the language <code className="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">L = [A-Z]²-[0-9]⁴-[0-9]³ (|w|=11)</code> using an explicit 13-state automaton.
+            It demonstrates formal language recognition for the language <code className="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">L = [A-Z]²-[0-9]⁴-[0-9]³ (|w| = 11)</code> using an explicit 13-state automaton.
           </p>
           <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs">
             <p className="font-medium">
