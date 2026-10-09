@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   STORAGE_KEYS,
   getProducts,
+  findProduct,
   saveProduct,
   deleteProduct,
   getLogs,
@@ -9,6 +10,8 @@ import {
   clearLogs,
   getTheme,
   setTheme,
+  isDisclaimerAcknowledged,
+  setDisclaimerAcknowledged,
   DEFAULT_PRODUCTS
 } from './storage';
 
@@ -32,22 +35,31 @@ describe('Storage Service (Synchronous LocalStorage Manager)', () => {
     localStorage.clear();
   });
 
+  it('finds product case-insensitively', () => {
+    expect(findProduct('IT-2026-001')).toBeNull();
+    const p1 = { code: 'IT-2026-001', name: 'Workstation 1', category: 'Information Technology', year: '2026', addedAt: '2026-09-26' };
+    saveProduct(p1);
+    expect(findProduct('IT-2026-001')).toEqual(p1);
+    expect(findProduct('it-2026-001')).toEqual(p1);
+    expect(findProduct('NW-2026-999')).toBeNull();
+  });
+
   it('manages products correctly (save, get, delete by code) and rejects duplicates', () => {
     expect(getProducts()).toEqual([]);
 
-    const p1 = { id: 'p1', code: 'IT-2026-001', name: 'Workstation 1', addedAt: '2026-09-26' };
+    const p1 = { code: 'IT-2026-001', name: 'Workstation 1', category: 'Information Technology', year: '2026', addedAt: '2026-09-26' };
     const res1 = saveProduct(p1);
     expect(res1.success).toBe(true);
     expect(getProducts()).toEqual([p1]);
 
     // Reject duplicate code (case-insensitive) without altering catalog
-    const dupRes = saveProduct({ id: 'dup', code: 'it-2026-001', name: 'Workstation Duplicate', addedAt: '2026-09-26' });
+    const dupRes = saveProduct({ code: 'it-2026-001', name: 'Workstation Duplicate', category: 'Information Technology', year: '2026', addedAt: '2026-09-26' });
     expect(dupRes.success).toBe(false);
     expect(dupRes.error).toBe('DUPLICATE_CODE');
     expect(getProducts()).toHaveLength(1);
     expect(getProducts()[0].name).toBe('Workstation 1');
 
-    const p2 = { id: 'p2', code: 'NW-2026-118', name: 'Router', addedAt: '2026-09-26' };
+    const p2 = { code: 'NW-2026-118', name: 'Router', category: 'Network Infrastructure', year: '2026', addedAt: '2026-09-26' };
     const res2 = saveProduct(p2);
     expect(res2.success).toBe(true);
     expect(getProducts()).toHaveLength(2);
@@ -56,16 +68,17 @@ describe('Storage Service (Synchronous LocalStorage Manager)', () => {
     expect(getProducts()).toEqual([p2]);
   });
 
-  it('exports DEFAULT_PRODUCTS with only id, code, name, addedAt (no category)', () => {
+  it('exports DEFAULT_PRODUCTS adhering to minimalist schema { code, name, category, year, addedAt }', () => {
     expect(DEFAULT_PRODUCTS).toBeDefined();
     expect(Array.isArray(DEFAULT_PRODUCTS)).toBe(true);
     expect(DEFAULT_PRODUCTS.length).toBeGreaterThan(0);
     DEFAULT_PRODUCTS.forEach(p => {
-      expect(p).toHaveProperty('id');
       expect(p).toHaveProperty('code');
       expect(p).toHaveProperty('name');
+      expect(p).toHaveProperty('category');
+      expect(p).toHaveProperty('year');
       expect(p).toHaveProperty('addedAt');
-      expect(p.category).toBeUndefined();
+      expect(p.id).toBeUndefined();
     });
   });
 
@@ -106,5 +119,13 @@ describe('Storage Service (Synchronous LocalStorage Manager)', () => {
     expect(getTheme()).toBe('dark');
     setTheme('light');
     expect(getTheme()).toBe('light');
+  });
+
+  it('manages academic disclaimer acknowledgment setting', () => {
+    expect(isDisclaimerAcknowledged()).toBe(false);
+    setDisclaimerAcknowledged(true);
+    expect(isDisclaimerAcknowledged()).toBe(true);
+    setDisclaimerAcknowledged(false);
+    expect(isDisclaimerAcknowledged()).toBe(false);
   });
 });
